@@ -1,0 +1,38 @@
+name: denim_diverse
+description: "A premium denim e-commerce web and mobile application."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+
+  cupertino_icons: ^1.0.8
+
+  # UI & UX Essentials
+  google_fonts: ^6.2.1
+  cached_network_image: ^3.3.1
+  flutter_svg: ^2.0.10+1
+
+  # State Management (Professional Standard)
+  provider: ^6.1.1
+  intl: ^0.20.2
+  shimmer: ^3.0.0
+  font_awesome_flutter: ^10.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Assets registration (Ensure EXACTLY 2 spaces before 'assets' and 4 before '-')
+  assets:
+    - assets/icons/
+    - assets/images/
