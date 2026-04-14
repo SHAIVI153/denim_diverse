@@ -1,17 +1,24 @@
-# denim_dynasty
+# 👕 Denim Diverse - Premium E-Commerce App (Work in Progress 🚧)
 
-A new Flutter project.
+**Denim Diverse** is a modern Flutter application designed for a premium denim shopping experience. This project showcases full-stack mobile development skills, focusing on clean UI/UX and robust backend integration.
 
-## Getting Started
+> **Status:** This project is currently under active development. New features are being added regularly!
 
-This project is a starting point for a Flutter application.
+## 🚀 Key Features (Current & Upcoming)
+- **Elegant UI:** A sleek, minimal interface designed for fashion enthusiasts.
+- **Product Categorization:** Organized sections for Baggy, Bootcut, Straight, and Skinny fits.
+- **Cart Logic:** Fully functional cart system (in progress).
+- **Admin Control:** Dedicated dashboard for inventory management.
+- **Firebase Integration:** Real-time database and secure authentication.
 
-A few resources to get you started if this is your first Flutter project:
+## 🛠️ Tech Stack
+- **Framework:** Flutter
+- **Language:** Dart
+- **State Management:** Provider / Bloc
+- **Backend:** Firebase (Auth, Firestore)
+- **Architecture:** Clean Architecture principles
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## ⚙️ Installation & Setup
+1. Clone the repository:
+   ```bash
+   git clone [https://github.com/SHAIVI153/denim_diverse.git](https://github.com/SHAIVI153/denim_diverse.git)
