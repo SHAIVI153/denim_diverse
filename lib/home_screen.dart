@@ -5,8 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import 'login/login_screen.dart';
-import 'denim_footer.dart';
-import 'custom_drawer.dart'; // 1. Custom Drawer import kiya
+import 'custom_drawer.dart';
+import 'layout_feature.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -45,163 +45,142 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isWeb = width > 950;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      // 2. Drawer ab Mobile aur Web dono par enable hai
+      backgroundColor: const Color(0xFF0A192F),
       drawer: const DenimDiverseDrawer(),
-      body: SafeArea(
-        top: false,
-        child: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            // Top Bars
-            SliverToBoxAdapter(
-              child: Column(
+      body: LayoutFeature(
+        controller: _scrollController,
+        child: Column(
+          children: [
+            if (isWeb) _buildBlueTopBar(),
+            _buildHeader(context, isWeb),
+            _buildHero(width, isWeb),
+            const PromoBannerOverlay(),
+            _buildPromoBar(),
+            const SizedBox(height: 30),
+
+            if (!isWeb) _buildCategoryChips(),
+
+            Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal: isWeb ? width * 0.05 : 20,
+                  vertical: 40
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (isWeb) _buildBlueTopBar(),
-                  _buildHeader(context, isWeb),
+                  if (isWeb)
+                    Container(
+                      width: 200,
+                      margin: const EdgeInsets.only(right: 40),
+                      child: _buildSidebarContent(),
+                    ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _buildSectionHeader(selectedCategory),
+                        const SizedBox(height: 40),
+                        _buildProductGrid(isWeb),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
 
-            // Hero Section
-            SliverPersistentHeader(
-              pinned: false,
-              delegate: HeroSectionDelegate(
-                maxHeight: isWeb ? 600 : 450,
-                child: _buildHero(width, isWeb),
-              ),
-            ),
+            const DenimReviews(),
 
-            // Product & Content Area
-            SliverToBoxAdapter(
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
-                  ),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -5))
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    const PromoBannerOverlay(),
-                    _buildPromoBar(),
-                    const SizedBox(height: 30),
+            // Image 38bbc5.png: Social Bar Section
+            const SizedBox(height: 60),
+            const Text("FOLLOW US ON SOCIAL MEDIA FOR THE LATEST UPDATES",
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            const SizedBox(height: 25),
+            const SocialMarquee(),
 
-                    if (!isWeb) _buildCategoryChips(),
+            // Image 2ecda0.jpg: Community Section
+            _buildCommunitySection(isWeb),
 
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: isWeb ? width * 0.05 : 20,
-                          vertical: 40
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (isWeb)
-                            Container(
-                              width: 200,
-                              margin: const EdgeInsets.only(right: 40),
-                              child: _buildSidebarContent(),
-                            ),
-                          Expanded(
-                            child: Column(
-                              children: [
-                                _buildSectionHeader(selectedCategory),
-                                const SizedBox(height: 40),
-                                _buildProductGrid(isWeb),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const DenimReviews(),
-                    const SizedBox(height: 40),
-                    const DenimFooter(),
-                  ],
-                ),
-              ),
-            ),
+            const SizedBox(height: 80),
           ],
         ),
       ),
     );
   }
 
-  // --- Updated Header with Menu Icon for All ---
+  // --- Community Grid Section ---
+  Widget _buildCommunitySection(bool isWeb) {
+    return Column(
+      children: [
+        const SizedBox(height: 80),
+        const Text("TAG @DENIM_DIVERSE FOR A CHANCE TO BE FEATURED",
+            style: TextStyle(fontSize: 10, letterSpacing: 2, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 15),
+        Text("Join our community of 725K+",
+            style: GoogleFonts.montserrat(fontSize: isWeb ? 35 : 24, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 40),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Wrap(
+            spacing: 20,
+            runSpacing: 30,
+            alignment: WrapAlignment.center,
+            children: [
+              _communityCard("@SHAWAIZ_N", 'assets/images/user1.jpg', isWeb),
+              _communityCard("@ASAD_MUSTAFA", 'assets/images/user2.jpg', isWeb),
+              _communityCard("@NOMAN_KHAN", 'assets/images/user3.jpg', isWeb),
+              _communityCard("@SALMAN_KHAN", 'assets/images/user4.jpg', isWeb),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _communityCard(String handle, String imgPath, bool isWeb) {
+    double cardWidth = isWeb ? 280 : (MediaQuery.of(context).size.width / 2) - 30;
+    return Column(
+      children: [
+        Text(handle, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        Container(
+          width: cardWidth,
+          height: cardWidth * 1.3,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF6F6F6),
+            image: DecorationImage(image: AssetImage(imgPath), fit: BoxFit.cover),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Text("SHOP THE LOOK",
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
+      ],
+    );
+  }
+
+  // --- UI Helpers ---
   Widget _buildHeader(BuildContext context, bool isWeb) {
     return Container(
-      height: isWeb ? 90 : null,
       padding: EdgeInsets.symmetric(horizontal: isWeb ? 40 : 15, vertical: isWeb ? 0 : 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
-      ),
+      height: isWeb ? 90 : null,
+      decoration: BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Colors.grey.shade100))),
       child: Row(
         children: [
-          // 3. Burger Icon hamesha ke liye enable kar diya
-          Builder(
-              builder: (ctx) => IconButton(
-                  icon: const Icon(Icons.menu_outlined, color: Colors.black, size: 28),
-                  onPressed: () => Scaffold.of(ctx).openDrawer()
-              )
-          ),
-
+          Builder(builder: (ctx) => IconButton(icon: const Icon(Icons.menu_outlined, color: Colors.black, size: 28), onPressed: () => Scaffold.of(ctx).openDrawer())),
           const SizedBox(width: 10),
-
-          Text("DenimDiverse.",
-              style: GoogleFonts.montserrat(
-                  fontSize: isWeb ? 26 : 18,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1
-              )
-          ),
-
+          Text("DenimDiverse.", style: GoogleFonts.montserrat(fontSize: isWeb ? 26 : 18, fontWeight: FontWeight.w900, letterSpacing: -1)),
           if (isWeb) const Spacer(),
-
           if (isWeb)
             SizedBox(
-              width: 350,
-              height: 45,
+              width: 350, height: 45,
               child: TextField(
                 onChanged: (value) => setState(() => searchQuery = value),
-                decoration: InputDecoration(
-                  hintText: "SEARCH COLLECTION...",
-                  hintStyle: const TextStyle(fontSize: 10, letterSpacing: 1),
-                  prefixIcon: const Icon(Icons.search, size: 18),
-                  filled: true,
-                  fillColor: const Color(0xFFF6F6F6),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(5), borderSide: BorderSide.none),
-                  contentPadding: EdgeInsets.zero,
-                ),
+                decoration: InputDecoration(hintText: "SEARCH COLLECTION...", prefixIcon: const Icon(Icons.search, size: 18), filled: true, fillColor: const Color(0xFFF6F6F6), border: OutlineInputBorder(borderRadius: BorderRadius.circular(5), borderSide: BorderSide.none), contentPadding: EdgeInsets.zero),
               ),
             ),
-
           const Spacer(),
-
-          if (isWeb) ...[
-            InkWell(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen())),
-              child: _navIcon(Icons.person_outline),
-            ),
-            const SizedBox(width: 15),
-            _navIcon(Icons.favorite_border),
-            const SizedBox(width: 15),
-          ],
-
           Consumer<CartProvider>(
             builder: (context, cart, child) => InkWell(
               onTap: () => Navigator.pushNamed(context, '/cart'),
-              child: Badge(
-                label: Text("${cart.itemCount}", style: const TextStyle(fontSize: 8, color: Colors.white)),
-                backgroundColor: const Color(0xFF0066D4),
-                child: const Icon(Icons.shopping_cart_outlined, size: 24),
-              ),
+              child: Badge(label: Text("${cart.itemCount}", style: const TextStyle(fontSize: 8, color: Colors.white)), backgroundColor: const Color(0xFF0066D4), child: const Icon(Icons.shopping_cart_outlined, size: 24)),
             ),
           ),
         ],
@@ -209,56 +188,32 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- Grid & Helpers ---
   Widget _buildProductGrid(bool isWeb) {
     final filteredProducts = fitsData.where((p) {
       bool matchesSearch = p['name']!.toLowerCase().contains(searchQuery.toLowerCase());
       bool matchesCategory = selectedCategory == "ALL JEANS" || p['category'] == selectedCategory;
       return matchesSearch && matchesCategory;
     }).toList();
-
     if (filteredProducts.isEmpty) return _buildEmptyState();
-
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: filteredProducts.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isWeb ? 3 : 2,
-        childAspectRatio: isWeb ? 0.65 : 0.6,
-        mainAxisSpacing: 25,
-        crossAxisSpacing: 15,
-      ),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: isWeb ? 3 : 2, childAspectRatio: isWeb ? 0.65 : 0.6, mainAxisSpacing: 25, crossAxisSpacing: 15),
       itemBuilder: (context, index) => _buildProductCard(filteredProducts[index]),
     );
   }
 
   Widget _buildProductCard(Map<String, dynamic> data) {
-    double price = data['price'];
-    double originalPrice = price / 0.7;
     return InkWell(
       onTap: () => Navigator.pushNamed(context, '/product-detail', arguments: data),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Stack(
-              children: [
-                Container(width: double.infinity, decoration: const BoxDecoration(color: Color(0xFFFBFBFB)), child: Hero(tag: data['id'], child: Image.asset(data['image']!, fit: BoxFit.cover))),
-                Positioned(top: 10, left: 10, child: Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), color: Colors.red.shade700, child: const Text("30% OFF", style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)))),
-              ],
-            ),
-          ),
+          Expanded(child: Container(color: const Color(0xFFFBFBFB), child: Image.asset(data['image']!, fit: BoxFit.cover))),
           const SizedBox(height: 12),
           Text(data['name']!.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1)),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Text("Rs. ${price.toStringAsFixed(0)}", style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
-              const SizedBox(width: 8),
-              Text("Rs. ${originalPrice.toStringAsFixed(0)}", style: const TextStyle(fontSize: 10, color: Colors.grey, decoration: TextDecoration.lineThrough)),
-            ],
-          ),
+          Text("Rs. ${data['price'].toStringAsFixed(0)}", style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
         ],
       ),
     );
@@ -266,53 +221,93 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHero(double width, bool isWeb) {
     return Container(
-      width: double.infinity,
-      height: isWeb ? 600 : 450,
-      decoration: const BoxDecoration(color: Colors.black),
+      width: double.infinity, height: isWeb ? 600 : 450, color: Colors.black,
       child: Stack(
         children: [
           Positioned.fill(child: Image.asset('assets/images/denim_diverse.jpg', fit: BoxFit.cover)),
-          Positioned.fill(child: Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.bottomLeft, end: Alignment.centerRight, colors: [Colors.black.withOpacity(0.8), Colors.black.withOpacity(0.2), Colors.transparent])))),
-          Positioned(
-            left: isWeb ? 80 : 30, bottom: isWeb ? 100 : 60,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(height: 2, width: 40, color: Colors.white, margin: const EdgeInsets.only(bottom: 20)),
-                Text("BEYOND THE", style: GoogleFonts.montserrat(fontSize: 12, color: Colors.white, letterSpacing: 10, fontWeight: FontWeight.w300)),
-                const SizedBox(height: 5),
-                Text("STANDARD\nBLUE", style: GoogleFonts.montserrat(fontSize: isWeb ? 65 : 36, fontWeight: FontWeight.w900, color: Colors.white, height: 1.0, letterSpacing: -1)),
-                const SizedBox(height: 30),
-                _blackButton("SHOP NOW", onTap: _scrollToProducts),
-              ],
-            ),
-          ),
+          Positioned(left: isWeb ? 80 : 30, bottom: isWeb ? 100 : 60, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text("BEYOND THE", style: GoogleFonts.montserrat(fontSize: 12, color: Colors.white, letterSpacing: 10)), Text("STANDARD\nBLUE", style: GoogleFonts.montserrat(fontSize: isWeb ? 65 : 36, fontWeight: FontWeight.w900, color: Colors.white, height: 1.0)), const SizedBox(height: 30), _blackButton("SHOP NOW", onTap: _scrollToProducts)])),
         ],
       ),
     );
   }
 
-  // --- Static UI Helpers ---
-  Widget _buildBlueTopBar() => Container(height: 40, color: const Color(0xFF0066D4), padding: const EdgeInsets.symmetric(horizontal: 40), child: Row(children: [Icon(Icons.email_outlined, color: Colors.white, size: 14), const SizedBox(width: 5), Text("support@denimdiverse.com", style: TextStyle(color: Colors.white, fontSize: 10)), Spacer(), Text("Welcome to Denim Diverse!", style: TextStyle(color: Colors.white, fontSize: 10)), Spacer(), Text("PKR", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold))]));
-  Widget _navIcon(IconData icon) => Icon(icon, size: 24, color: Colors.black87);
+  Widget _buildBlueTopBar() => Container(height: 40, color: const Color(0xFF0066D4), child: const Center(child: Text("FREE SHIPPING ON ORDERS OVER RS. 5000", style: TextStyle(color: Colors.white, fontSize: 10))));
   Widget _buildPromoBar() => Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 12), color: Colors.black, child: const Center(child: Text("SALE: UP TO 30% OFF", style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 2))));
-  Widget _buildCategoryChips() => SizedBox(height: 40, child: ListView.builder(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 15), itemCount: categories.length, itemBuilder: (context, index) { bool isSelected = selectedCategory == categories[index]; return Padding(padding: const EdgeInsets.only(right: 10), child: ChoiceChip(label: Text(categories[index], style: TextStyle(fontSize: 10, color: isSelected ? Colors.white : Colors.black)), selected: isSelected, onSelected: (val) { setState(() => selectedCategory = categories[index]); _scrollToProducts(); }, selectedColor: Colors.black, backgroundColor: Colors.white, shape: const RoundedRectangleBorder())); }));
-  Widget _buildSidebarContent() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text("CATEGORIES", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 2)), const SizedBox(height: 20), ...categories.map((cat) => InkWell(onTap: () { setState(() => selectedCategory = cat); _scrollToProducts(); }, child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(cat, style: TextStyle(fontSize: 10, fontWeight: selectedCategory == cat ? FontWeight.w900 : FontWeight.w400, color: selectedCategory == cat ? Colors.black : Colors.grey))))).toList()]);
-  Widget _buildSectionHeader(String title) => Column(children: [Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 3)), const SizedBox(height: 8), Container(height: 2, width: 40, color: Colors.black)]);
-  Widget _buildEmptyState() => Column(children: [const SizedBox(height: 50), const Icon(Icons.search_off, size: 50, color: Colors.grey), const SizedBox(height: 20), const Text("NO MATCHES FOUND", style: TextStyle(letterSpacing: 2, color: Colors.grey, fontSize: 10))]);
-  Widget _blackButton(String text, {required VoidCallback onTap}) => InkWell(onTap: onTap, child: Container(padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15), color: Colors.black, child: Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 2))));
+  Widget _buildCategoryChips() => SizedBox(height: 40, child: ListView.builder(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 15), itemCount: categories.length, itemBuilder: (context, index) { bool isSelected = selectedCategory == categories[index]; return Padding(padding: const EdgeInsets.only(right: 10), child: ChoiceChip(label: Text(categories[index], style: TextStyle(fontSize: 10, color: isSelected ? Colors.white : Colors.black)), selected: isSelected, onSelected: (val) { setState(() => selectedCategory = categories[index]); _scrollToProducts(); }, selectedColor: Colors.black, backgroundColor: Colors.white)); }));
+  Widget _buildSidebarContent() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text("CATEGORIES", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12)), const SizedBox(height: 20), ...categories.map((cat) => InkWell(onTap: () { setState(() => selectedCategory = cat); _scrollToProducts(); }, child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(cat, style: TextStyle(fontSize: 10, fontWeight: selectedCategory == cat ? FontWeight.w900 : FontWeight.w400))))).toList()]);
+  Widget _buildSectionHeader(String title) => Column(children: [Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 3)), Container(height: 2, width: 40, color: Colors.black)]);
+  Widget _buildEmptyState() => const Column(children: [SizedBox(height: 50), Icon(Icons.search_off, size: 50, color: Colors.grey), Text("NO MATCHES FOUND", style: TextStyle(fontSize: 10))]);
+  Widget _blackButton(String text, {required VoidCallback onTap}) => InkWell(onTap: onTap, child: Container(padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15), color: Colors.black, child: Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10))));
 }
 
-class HeroSectionDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-  final double maxHeight;
-  HeroSectionDelegate({required this.child, required this.maxHeight});
+// --- Moving Social Bar (Infinite Slow Loop) ---
+class SocialMarquee extends StatefulWidget {
+  const SocialMarquee({super.key});
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => SizedBox.expand(child: child);
+  State<SocialMarquee> createState() => _SocialMarqueeState();
+}
+
+class _SocialMarqueeState extends State<SocialMarquee> {
+  late ScrollController _scrollController;
   @override
-  double get maxExtent => maxHeight;
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    Future.delayed(const Duration(milliseconds: 500), _animate);
+  }
+
+  void _animate() {
+    if (_scrollController.hasClients) {
+      double maxScroll = _scrollController.position.maxScrollExtent;
+      // Duration ko mazeed barha kar 100 seconds kar diya hai mazeed slow karne ke liye
+      _scrollController.animateTo(
+        maxScroll,
+        duration: const Duration(seconds: 100),
+        curve: Curves.linear,
+      ).then((_) {
+        if (mounted) {
+          _scrollController.jumpTo(0);
+          _animate();
+        }
+      });
+    }
+  }
+
   @override
-  double get minExtent => maxHeight;
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => false;
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 45,
+      child: ListView.builder(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 1000,
+        itemBuilder: (context, index) => Row(
+          children: [
+            _item(Icons.camera_alt, const Color(0xFFE4405F), "@denim.diverse"),
+            _item(Icons.facebook, const Color(0xFF1877F2), "denim.intl"),
+            _item(Icons.play_circle_fill, const Color(0xFFFF0000), "@denim_diverse"),
+            _item(Icons.music_note, Colors.black, "@denim.diverse"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _item(IconData icon, Color color, String text) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 50),
+    child: Row(
+      children: [
+        Icon(icon, size: 22, color: color),
+        const SizedBox(width: 10),
+        Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.black))
+      ],
+    ),
+  );
 }
