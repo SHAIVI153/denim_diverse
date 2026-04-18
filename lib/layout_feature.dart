@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'denim_footer.dart';
+import 'screens/denim_footer.dart';
 
 class LayoutFeature extends StatelessWidget {
   final Widget child;

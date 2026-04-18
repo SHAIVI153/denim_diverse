@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
 
 class DenimDiverseDrawer extends StatelessWidget {
-  const DenimDiverseDrawer({super.key});
+  // Callback function add kiya
+  final Function(String)? onCategorySelected;
+
+  const DenimDiverseDrawer({super.key, this.onCategorySelected});
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: Colors.white,
-
       width: MediaQuery.of(context).size.width * 0.85,
       child: Column(
         children: [
-          // Header: Logo Section
           _buildHeader(),
-
-          // Body: Categories Section
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                _drawerItem(context, "New Arrivals", Icons.fiber_new_outlined),
-                _drawerItem(context, "Crazy Deals", Icons.local_offer_outlined),
-                _drawerItem(context, "Bundle Offers", Icons.inventory_2_outlined),
-                _drawerItem(context, "Men", Icons.male_outlined),
-                _drawerItem(context, "Women", Icons.female_outlined),
-                _drawerItem(context, "Kids", Icons.child_care_outlined),
-                _drawerItem(context, "Shop By Collection", Icons.grid_view_outlined),
+                _drawerItem(context, "NEW ARRIVALS", Icons.fiber_new_outlined),
+                // Crazy Deals ko special color diya
+                _drawerItem(context, "CRAZY DEALS", Icons.local_offer_outlined, isSpecial: true),
+                _drawerItem(context, "BUNDLE OFFERS", Icons.inventory_2_outlined),
+                _drawerItem(context, "MEN", Icons.male_outlined),
+                _drawerItem(context, "WOMEN", Icons.female_outlined),
+                _drawerItem(context, "KIDS", Icons.child_care_outlined),
+                _drawerItem(context, "SHOP BY COLLECTION", Icons.grid_view_outlined),
 
                 const Divider(thickness: 1, height: 30),
 
@@ -35,25 +35,22 @@ class DenimDiverseDrawer extends StatelessWidget {
               ],
             ),
           ),
-
-          // Footer: Language/Currency (Optional elo style)
           _buildFooter(),
         ],
       ),
     );
   }
 
-  // Header Widget
   Widget _buildHeader() {
     return Container(
-      height: 150,
+      height: 120, // Height thori kam ki
       width: double.infinity,
       color: Colors.white,
       child: const Center(
         child: Text(
           "DENIM DIVERSE",
           style: TextStyle(
-            fontSize: 22,
+            fontSize: 20,
             fontWeight: FontWeight.w900,
             letterSpacing: 2.0,
             color: Colors.black,
@@ -63,27 +60,30 @@ class DenimDiverseDrawer extends StatelessWidget {
     );
   }
 
-  // Single Drawer Item Widget
-  Widget _drawerItem(BuildContext context, String title, IconData icon) {
+  // Parameter 'isSpecial' add kiya crazy deals ko highlight karne ke liye
+  Widget _drawerItem(BuildContext context, String title, IconData icon, {bool isSpecial = false}) {
     return ListTile(
-      leading: Icon(icon, color: Colors.black87, size: 22),
+      leading: Icon(icon, color: isSpecial ? Colors.red : Colors.black87, size: 22),
       title: Text(
         title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: Colors.black87,
+        style: TextStyle(
+          fontSize: 14, // Thora sleek size
+          fontWeight: isSpecial ? FontWeight.bold : FontWeight.w500,
+          color: isSpecial ? Colors.red : Colors.black87,
         ),
       ),
-      trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+      trailing: const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
       onTap: () {
-        Navigator.pop(context); // Drawer close karne ke liye
-        // Add your navigation logic here
+        Navigator.pop(context); // Drawer close
+
+        // Agar callback set hai toh home screen ko category bhej do
+        if (onCategorySelected != null) {
+          onCategorySelected!(title.toUpperCase());
+        }
       },
     );
   }
 
-  // Footer Widget
   Widget _buildFooter() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -91,8 +91,8 @@ class DenimDiverseDrawer extends StatelessWidget {
       child: const Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text("PKRRs", style: TextStyle(fontWeight: FontWeight.bold)),
-          Icon(Icons.keyboard_arrow_down),
+          Text("PKR Rs.", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+          Icon(Icons.keyboard_arrow_down, size: 16),
         ],
       ),
     );
