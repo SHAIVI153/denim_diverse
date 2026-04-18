@@ -21,12 +21,12 @@ class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
 
   final List<Map<String, dynamic>> arrivalProducts = [
-    {'name': 'PREMIUM HANGING DENIM', 'price': 3499.0, 'img': 'assets/images/hang_denim1.jpg'},
-    {'name': 'VINTAGE WASHED JEANS', 'price': 4199.0, 'img': 'assets/images/hang_denim2.jpg'},
-    {'name': 'DARK INDIGO SLIM', 'price': 3850.0, 'img': 'assets/images/hang_denim3.jpg'},
-    {'name': 'STREETWEAR BAGGY', 'price': 2999.0, 'img': 'assets/images/hang_denim4.jpg'},
-    {'name': 'CLASSIC STRAIGHT CUT', 'price': 4500.0, 'img': 'assets/images/hang_denim5.jpg'},
-    {'name': 'RETRO LIGHT BLUE', 'price': 5200.0, 'img': 'assets/images/hang_denim6.jpg'},
+    {'name': 'PREMIUM HANGING DENIM', 'price': 1799.0, 'img': 'assets/images/premium_hanging.jpg'},
+    {'name': 'VINTAGE WASHED JEANS', 'price': 1899.0, 'img': 'assets/images/wintage_washed.jpg'},
+    {'name': 'DARK INDIGO SLIM', 'price': 1699.0, 'img': 'assets/images/indigo.jpg'},
+    {'name': 'STREETWEAR BAGGY', 'price': 1999.0, 'img': 'assets/images/streetwear_baggy.jpg'},
+    {'name': 'CLASSIC STRAIGHT CUT', 'price': 1799.0, 'img': 'assets/images/straight_wear.jpg'},
+    {'name': 'RETRO LIGHT BLUE', 'price': 1999.0, 'img': 'assets/images/retro_light.jpg'},
   ];
 
   final List<Map<String, dynamic>> fitsData = [
@@ -128,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(25), // Rounded as per image
                 image: const DecorationImage(
-                  image: AssetImage('assets/images/denim_bundle_bg.jpg'),
+                  image: AssetImage('assets/images/hangging_banner.jpg'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -164,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(25),
                 image: const DecorationImage(
-                  image: AssetImage('assets/images/denim_clearance_bg.jpg'),
+                  image: AssetImage('assets/images/clearenss_jeans.jpg'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -251,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Container(
             width: isWeb ? width * 0.30 : width * 0.40, height: sectionHeight,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), image: const DecorationImage(image: AssetImage('assets/images/denim_arrivals_banner.jpg'), fit: BoxFit.cover)),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), image: const DecorationImage(image: AssetImage('assets/images/jeans_fit.jpg'), fit: BoxFit.cover)),
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), gradient: LinearGradient(begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [Colors.black.withOpacity(0.8), Colors.transparent])),

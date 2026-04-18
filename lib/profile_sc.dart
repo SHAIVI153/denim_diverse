@@ -24,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
     {'id': '2', 'name': 'HIGH WAIST MOM FIT', 'image': 'assets/images/momfit.jpg', 'price': 2799.0, 'category': 'WOMEN'},
     {'id': '3', 'name': 'BOYFRIEND DENIM', 'image': 'assets/images/boyfriend.jpg', 'price': 2999.0, 'category': 'WOMEN'},
     {'id': '4', 'name': 'STREET BAGGY', 'image': 'assets/images/baggy.jpg', 'price': 3299.0, 'category': 'MEN'},
-    {'id': '5', 'name': 'CLASSIC STRAIGHT', 'image': 'assets/images/straight.jpg', 'price': 2799.0, 'category': 'MEN'},
+    {'id': '5', 'name': 'CLASSIC STRAIGHT', 'image': 'assets/images/straight_wear.jpg', 'price': 2799.0, 'category': 'MEN'},
     {'id': '6', 'name': 'SUPER SKINNY', 'image': 'assets/images/skinny.jpg', 'price': 3599.0, 'category': 'WOMEN'},
   ];
 

@@ -19,7 +19,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
     {'id': '2', 'name': 'MOM FIT', 'image': 'assets/images/momfit.jpg', 'price': 4200.0, 'category': 'WOMEN'},
     {'id': '3', 'name': 'BOYFRIEND', 'image': 'assets/images/boyfriend.jpg', 'price': 4800.0, 'category': 'WOMEN'},
     {'id': '4', 'name': 'BAGGY', 'image': 'assets/images/baggy.jpg', 'price': 5100.0, 'category': 'MEN'},
-    {'id': '5', 'name': 'STRAIGHT', 'image': 'assets/images/straight.jpg', 'price': 3900.0, 'category': 'MEN'},
+    {'id': '5', 'name': 'STRAIGHT', 'image': 'assets/images/straight_wear.jpg', 'price': 3900.0, 'category': 'MEN'},
     {'id': '6', 'name': 'SKINNY', 'image': 'assets/images/skinny.jpg', 'price': 3500.0, 'category': 'WOMEN'},
   ];
 
