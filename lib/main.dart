@@ -1,10 +1,10 @@
-import 'package:denim_diverse/checkout_screen.dart';
-import 'package:denim_diverse/home_screen.dart';
-import 'package:denim_diverse/product_detail_screen.dart';
+import 'package:denim_diverse/screens/checkout_screen.dart';
+import 'package:denim_diverse/screens/home_screen.dart';
+import 'package:denim_diverse/screens/product_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'cart_screen.dart';
+import 'screens/cart_screen.dart';
 import 'providers/cart_provider.dart';
 import 'providers/order_provider.dart';
 

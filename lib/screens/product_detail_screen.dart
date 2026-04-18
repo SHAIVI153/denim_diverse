@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../providers/cart_provider.dart';
+import '../../providers/cart_provider.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Map<String, dynamic> product;
