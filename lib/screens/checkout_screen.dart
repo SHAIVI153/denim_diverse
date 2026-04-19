@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
-import '../order_success_screen.dart';
+import '../../providers/order_provider.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -13,25 +13,37 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _promoController = TextEditingController();
 
-  // --- PAKISTANI PHONE VALIDATION ---
-  // Accepts: 03001234567, 923001234567, or +923001234567
+  // --- CONTROLLERS ---
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _postalController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _addressController.dispose();
+    _cityController.dispose();
+    _postalController.dispose();
+    super.dispose();
+  }
+
+  // --- VALIDATIONS ---
   String? _validatePhone(String? value) {
     if (value == null || value.isEmpty) return "Phone number is required";
     final bool phoneValid = RegExp(r"^((\+92)|(92)|(0))3\d{9}$").hasMatch(value);
-    return phoneValid ? null : "Enter valid Pakistani number (e.g. 03001234567)";
+    return phoneValid ? null : "Enter valid Pakistani number";
   }
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) return "Email is required";
     final bool emailValid = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value);
     return emailValid ? null : "Enter a valid email address";
-  }
-
-  String? _validatePostal(String? value) {
-    if (value == null || value.isEmpty) return "Required";
-    return value.length == 5 ? null : "Must be 5 digits";
   }
 
   @override
@@ -42,7 +54,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text("CHECKOUT", style: GoogleFonts.montserrat(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 3)),
         centerTitle: true,
@@ -88,16 +99,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         children: [
           const Text("SHIPPING INFORMATION", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.5)),
           const Divider(height: 40, color: Colors.black12),
-          _buildTextField("FULL NAME", Icons.person_outline, validator: (v) => v!.isEmpty ? "Required" : null),
-          _buildTextField("PHONE NUMBER", Icons.phone_android_outlined, hint: "e.g. 03001234567", isPhone: true, validator: _validatePhone),
-          _buildTextField("EMAIL ADDRESS", Icons.email_outlined, validator: _validateEmail),
-          _buildTextField("COMPLETE ADDRESS", Icons.home_outlined, maxLines: 2, validator: (v) => v!.isEmpty ? "Required" : null),
+          _buildTextField("FULL NAME", Icons.person_outline, controller: _nameController, validator: (v) => v!.isEmpty ? "Required" : null),
+          _buildTextField("PHONE NUMBER", Icons.phone_android_outlined, controller: _phoneController, hint: "e.g. 03001234567", isPhone: true, validator: _validatePhone),
+          _buildTextField("EMAIL ADDRESS", Icons.email_outlined, controller: _emailController, validator: _validateEmail),
+          _buildTextField("COMPLETE ADDRESS", Icons.home_outlined, controller: _addressController, maxLines: 2, validator: (v) => v!.isEmpty ? "Required" : null),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _buildTextField("CITY", Icons.location_city, validator: (v) => v!.isEmpty ? "Required" : null)),
+              Expanded(child: _buildTextField("CITY", Icons.location_city, controller: _cityController, validator: (v) => v!.isEmpty ? "Required" : null)),
               const SizedBox(width: 20),
-              Expanded(child: _buildTextField("POSTAL CODE", Icons.mark_as_unread_outlined, validator: _validatePostal)),
+              Expanded(child: _buildTextField("POSTAL CODE", Icons.mark_as_unread_outlined, controller: _postalController, validator: (v) => v!.isEmpty ? "Required" : null)),
             ],
           ),
         ],
@@ -118,20 +129,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         children: [
           const Text("ORDER SUMMARY", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1.5)),
           const Divider(height: 40, color: Colors.black12),
-          _summaryRow("SUBTOTAL", "Rs. ${cart.totalAmount}"),
+          _summaryRow("SUBTOTAL", "Rs. ${cart.totalAmount.toStringAsFixed(0)}"),
           _summaryRow("SHIPPING FEE", "FREE"),
           const Divider(height: 40, color: Colors.black12),
-          _summaryRow("TOTAL PAYABLE", "Rs. ${cart.totalAmountAfterDiscount}", isTotal: true),
+          // REMOVED discount logic here:
+          _summaryRow("TOTAL PAYABLE", "Rs. ${cart.totalAmount.toStringAsFixed(0)}", isTotal: true),
           const SizedBox(height: 30),
           SizedBox(
             width: double.infinity,
             height: 55,
             child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.black, shape: const RoundedRectangleBorder()),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  shape: const RoundedRectangleBorder(),
+                  elevation: 0
+              ),
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
+                  // REMOVED totalAmountAfterDiscount here:
+                  Provider.of<OrderProvider>(context, listen: false).addOrder(
+                    cart.items.values.toList(),
+                    cart.totalAmount,
+                    _nameController.text,
+                    _emailController.text,
+                    _addressController.text,
+                    _phoneController.text,
+                  );
+
                   cart.clearCart();
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const OrderSuccessScreen()));
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("ORDER PLACED SUCCESSFULLY!"), backgroundColor: Colors.black),
+                  );
+
+                  Navigator.pushNamedAndRemoveUntil(context, '/order-history', (route) => route.isFirst);
                 }
               },
               child: const Text("PLACE ORDER", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 2)),
@@ -142,10 +173,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildTextField(String label, IconData icon, {int maxLines = 1, bool isPhone = false, String? hint, String? Function(String?)? validator}) {
+  Widget _buildTextField(String label, IconData icon, {required TextEditingController controller, int maxLines = 1, bool isPhone = false, String? hint, String? Function(String?)? validator}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: TextFormField(
+        controller: controller,
         maxLines: maxLines,
         validator: validator,
         keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
