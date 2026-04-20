@@ -32,8 +32,11 @@ class CartProvider with ChangeNotifier {
     return total;
   }
 
+  // Elo style UI ke liye getter
+  double get totalAmountAfterDiscount => totalAmount;
+
   void addItem(String productId, double price, String title, String imageUrl, String selectedSize) {
-    double oldPrice = price / 0.6; // 40% discount calculation
+    double oldPrice = price / 0.6;
 
     if (_items.containsKey(productId)) {
       _items.update(

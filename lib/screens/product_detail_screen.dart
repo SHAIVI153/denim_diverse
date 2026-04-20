@@ -13,7 +13,7 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  String selectedSize = "32"; // Default size selection
+  String selectedSize = "32";
 
   @override
   Widget build(BuildContext context) {
@@ -28,18 +28,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         iconTheme: const IconThemeData(color: Colors.black),
         title: Text(
           (widget.product['name'] ?? "PRODUCT DETAILS").toString().toUpperCase(),
-          style: const TextStyle(
-              color: Colors.black,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2
-          ),
+          style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 2),
         ),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: isWeb ? width * 0.1 : 20, vertical: 30),
         child: isWeb
-            ? Row( // Web Layout (Side by Side)
+            ? Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(flex: 1, child: _buildImageGallery()),
@@ -47,7 +42,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             Expanded(flex: 1, child: _buildDetails()),
           ],
         )
-            : Column( // Mobile Layout (Stack)
+            : Column(
           children: [
             _buildImageGallery(),
             const SizedBox(height: 30),
@@ -59,7 +54,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildImageGallery() {
-    // Handling both 'image' and 'img' keys for safety
     final String imagePath = widget.product['image'] ?? widget.product['img'] ?? "";
 
     return Container(
@@ -80,31 +74,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-            "DENIM DIVERSE PREMIUM",
-            style: TextStyle(color: Colors.grey, fontSize: 10, letterSpacing: 2, fontWeight: FontWeight.bold)
-        ),
+        const Text("DENIM DIVERSE PREMIUM", style: TextStyle(color: Colors.grey, fontSize: 10, letterSpacing: 2, fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
-        Text(
-            widget.product['name'] ?? "Denim Article",
-            style: GoogleFonts.montserrat(fontSize: 28, fontWeight: FontWeight.w900, height: 1.1)
-        ),
+        Text(widget.product['name'] ?? "Denim Article", style: GoogleFonts.montserrat(fontSize: 28, fontWeight: FontWeight.w900, height: 1.1)),
         const SizedBox(height: 15),
         Row(
           children: [
-            Text(
-                "Rs. ${(widget.product['price'] ?? 0).toStringAsFixed(0)}",
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.black)
-            ),
+            Text("Rs. ${(widget.product['price'] ?? 0).toStringAsFixed(0)}", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.black)),
             const SizedBox(width: 15),
-            const Text(
-                "VAT INCLUDED",
-                style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold)
-            ),
+            const Text("VAT INCLUDED", style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold)),
           ],
         ),
         const Divider(height: 40, color: Color(0xFFEEEEEE)),
-
         const Text("SELECT WAIST SIZE", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
         const SizedBox(height: 15),
         Wrap(
@@ -112,107 +93,51 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           runSpacing: 10,
           children: ["28", "30", "32", "34", "36"].map((s) => _sizeButton(s)).toList(),
         ),
-
         const SizedBox(height: 40),
-        const Text(
-            "PRODUCT DESCRIPTION",
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)
-        ),
-        const SizedBox(height: 10),
-        Text(
-          "This premium denim is crafted from high-quality stretch fabric, designed for both comfort and durability. Featuring a classic wash and reinforced stitching.",
-          style: TextStyle(color: Colors.grey[600], fontSize: 13, height: 1.5),
-        ),
-
-        const SizedBox(height: 40),
-        // ADD TO BAG BUTTON
         SizedBox(
           width: double.infinity,
           height: 55,
           child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-              elevation: 0,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.black, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero)),
             onPressed: () {
               final cart = Provider.of<CartProvider>(context, listen: false);
-
-              // Extracting data safely
               final String pId = widget.product['id']?.toString() ?? widget.product['name'].toString();
-              final double pPrice = (widget.product['price'] is num)
-                  ? (widget.product['price'] as num).toDouble()
-                  : 0.0;
+              final double pPrice = (widget.product['price'] is num) ? (widget.product['price'] as num).toDouble() : 0.0;
               final String pName = widget.product['name'] ?? "Denim Item";
+
+              // FIX: Correctly extract the image path for CartItem
               final String pImg = widget.product['image'] ?? widget.product['img'] ?? "";
 
-              // Calling Provider with corrected parameters
               cart.addItem(pId, pPrice, pName, pImg, selectedSize);
 
-              // Feedback to User
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text("$pName ADDED TO BAG"),
                   backgroundColor: Colors.black,
-                  duration: const Duration(seconds: 2),
-                  action: SnackBarAction(
-                      label: "VIEW BAG",
-                      textColor: Colors.orange,
-                      onPressed: () => Navigator.pushNamed(context, '/cart')
-                  ),
+                  action: SnackBarAction(label: "VIEW BAG", textColor: Colors.orange, onPressed: () => Navigator.pushNamed(context, '/cart')),
                 ),
               );
             },
-            child: const Text(
-                "ADD TO BAG",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 2)
-            ),
+            child: const Text("ADD TO BAG", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 2)),
           ),
         ),
-        const SizedBox(height: 15),
-        _buildIconInfo(Icons.local_shipping_outlined, "FREE DELIVERY ON ORDERS OVER RS. 5000"),
-        _buildIconInfo(Icons.history_outlined, "30 DAYS EASY RETURN POLICY"),
       ],
     );
   }
 
-  Widget _buildSizeButton(String size) { // Fixed helper name for size selection
+  Widget _sizeButton(String size) {
     bool isSelected = selectedSize == size;
     return InkWell(
       onTap: () => setState(() => selectedSize = size),
       child: Container(
-        width: 60,
-        height: 45,
+        width: 60, height: 45,
         decoration: BoxDecoration(
           color: isSelected ? Colors.black : Colors.white,
           border: Border.all(color: isSelected ? Colors.black : Colors.grey.shade300),
         ),
         child: Center(
-          child: Text(
-            size,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.black,
-              fontSize: 13,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
+          child: Text(size, style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontSize: 13, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
         ),
-      ),
-    );
-  }
-
-  // Fixing the original _sizeButton call in wrap
-  Widget _sizeButton(String size) => _buildSizeButton(size);
-
-  Widget _buildIconInfo(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: Colors.grey),
-          const SizedBox(width: 10),
-          Text(text, style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
-        ],
       ),
     );
   }
