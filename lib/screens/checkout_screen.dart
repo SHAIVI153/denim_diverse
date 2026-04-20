@@ -14,9 +14,8 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Main Selection
+  // Selection States
   String _selectedPaymentMethod = "ONLINE";
-  // Sub Selection for Online
   String _selectedOnlineProvider = "CARD";
 
   // Controllers
@@ -25,7 +24,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController _lNameController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController(text: "92");
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _postalController = TextEditingController();
 
   @override
@@ -40,6 +39,69 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.dispose();
   }
 
+  // --- THANK YOU DIALOG ---
+  void _showThankYouDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
+          child: Container(
+            padding: const EdgeInsets.all(30),
+            width: MediaQuery.of(context).size.width * 0.8,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
+                const SizedBox(height: 20),
+                Text(
+                  "THANK YOU!",
+                  style: GoogleFonts.montserrat(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Your order has been placed successfully.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Order ID: #DD${1000 + (DateTime.now().millisecond)}",
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+                const SizedBox(height: 30),
+                const Divider(),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                    ),
+                    onPressed: () {
+                      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                    },
+                    child: const Text(
+                      "CONTINUE SHOPPING",
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
@@ -48,6 +110,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
+      appBar: isWeb ? null : AppBar(
+        title: const Text("CHECKOUT", style: TextStyle(color: Colors.black, fontSize: 13, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -83,10 +152,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
           _headerText("Contact"),
           _buildTextField("Email", _emailController,
-              hint: "example@domain.com",
+              hint: "example@gmail.com",
               validator: (v) {
-                if (v == null || v.isEmpty) return "Email zaroori hai";
-                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) return "Sahi email dalein";
+                if (v == null || v.isEmpty) return "Email is required";
+                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) return "Invalid email format";
                 return null;
               }
           ),
@@ -95,25 +164,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           _headerText("Delivery"),
           Row(
             children: [
-              Expanded(child: _buildTextField("First name", _fNameController, validator: (v) => v!.isEmpty ? "Zaroori hai" : null)),
+              Expanded(child: _buildTextField("First name", _fNameController, validator: (v) => v!.isEmpty ? "Required" : null)),
               const SizedBox(width: 12),
-              Expanded(child: _buildTextField("Last name", _lNameController, validator: (v) => v!.isEmpty ? "Zaroori hai" : null)),
+              Expanded(child: _buildTextField("Last name", _lNameController, validator: (v) => v!.isEmpty ? "Required" : null)),
             ],
           ),
-          _buildTextField("Address", _addressController, validator: (v) => v!.isEmpty ? "Address likhein" : null),
+          _buildTextField("Address", _addressController, validator: (v) => v!.isEmpty ? "Address is required" : null),
           Row(
             children: [
-              Expanded(child: _buildTextField("City", _cityController, validator: (v) => v!.isEmpty ? "City likhein" : null)),
+              Expanded(child: _buildTextField("City", _cityController, validator: (v) => v!.isEmpty ? "City is required" : null)),
               const SizedBox(width: 12),
-              Expanded(child: _buildTextField("Postal code", _postalController, validator: (v) => v!.isEmpty ? "Postal code likhein" : null)),
+              Expanded(child: _buildTextField("Postal code", _postalController,
+                  validator: (v) => (v == null || v.isEmpty) ? "Postal code required" : null)),
             ],
           ),
           _buildTextField("Phone", _phoneController,
-              hint: "923001234567",
+              hint: "03XXXXXXXXX",
               isNumber: true,
               validator: (v) {
-                if (v == null || v.isEmpty) return "Phone zaroori hai";
-                if (!RegExp(r"^92[0-9]{10}$").hasMatch(v)) return "92 ke sath 12 digits likhein";
+                if (v == null || v.isEmpty) return "Phone number is required";
+                if (!RegExp(r'^03[0-9]{9}$').hasMatch(v)) return "Enter valid 11-digit number (03XXXXXXXXX)";
                 return null;
               }
           ),
@@ -129,7 +199,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // --- IMPROVED PAYMENT BOX WITH SUB-OPTIONS ---
   Widget _buildPaymentBox() {
     return Container(
       decoration: BoxDecoration(
@@ -138,26 +207,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
       child: Column(
         children: [
-          // MAIN ONLINE OPTION
           _mainPaymentTile("ONLINE", "Online Payment", logos: ["visa.png", "mastercard.png", "jazzcash.png", "easypaisa.png"]),
 
-          // SUB-OPTIONS (Only show if ONLINE is selected)
           if (_selectedPaymentMethod == "ONLINE")
             Container(
               color: const Color(0xFFFAFAFA),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: 10),
               child: Column(
                 children: [
                   _subPaymentTile("CARD", "Debit / Credit Card", "visa.png"),
+                  const Divider(indent: 50, endIndent: 20),
                   _subPaymentTile("JAZZCASH", "JazzCash", "jazzcash.png"),
+                  const Divider(indent: 50, endIndent: 20),
                   _subPaymentTile("EASYPAISA", "EasyPaisa", "easypaisa.png"),
+                  const Divider(indent: 50, endIndent: 20),
+                  _subPaymentTile("NAYAPAY", "NayaPay", "nayapay.png"),
                 ],
               ),
             ),
 
           const Divider(height: 0),
-
-          // COD OPTION
           _mainPaymentTile("COD", "Cash on Delivery (COD)"),
         ],
       ),
@@ -175,7 +244,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           if (logos != null)
             Wrap(
               spacing: 4,
-              children: logos.take(3).map((img) => Image.asset("assets/logos/$img", height: 15, errorBuilder: (c,e,s)=>const SizedBox())).toList(),
+              children: logos.map((img) => Image.asset("assets/logos/$img", height: 14, errorBuilder: (c,e,s)=>const SizedBox())).toList(),
             ),
         ],
       ),
@@ -188,19 +257,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       value: value,
       groupValue: _selectedOnlineProvider,
       activeColor: Colors.blue,
-      controlAffinity: ListTileControlAffinity.trailing, // Radio right side par
+      controlAffinity: ListTileControlAffinity.trailing,
       title: Row(
         children: [
           Image.asset("assets/logos/$logo", height: 20, errorBuilder: (c,e,s)=>const Icon(Icons.payment, size: 18)),
           const SizedBox(width: 12),
-          Text(title, style: const TextStyle(fontSize: 12)),
+          Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
         ],
       ),
       onChanged: (v) => setState(() => _selectedOnlineProvider = v.toString()),
     );
   }
 
-  // --- RIGHT SECTION ---
   Widget _buildRightSection(CartProvider cart) {
     return Container(
       padding: const EdgeInsets.all(40),
@@ -213,7 +281,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 _productImage(item.image, item.quantity),
                 const SizedBox(width: 15),
                 Expanded(child: Text(item.name.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold))),
-                Text("Rs. ${(item.price * item.quantity).toStringAsFixed(0)}"),
+                Text("Rs. ${(item.price * item.quantity).toStringAsFixed(0)}", style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
           )).toList(),
@@ -237,9 +305,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController? controller, {String? hint, bool isNumber = false, String? Function(String?)? validator}) {
+  Widget _buildTextField(String label, TextEditingController controller, {String? hint, bool isNumber = false, String? Function(String?)? validator}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
         controller: controller,
         validator: validator,
@@ -259,18 +327,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return SizedBox(
       width: double.infinity, height: 55,
       child: ElevatedButton(
-        style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.black, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero)),
         onPressed: () {
           if (_formKey.currentState!.validate()) {
             final cart = Provider.of<CartProvider>(context, listen: false);
-            String finalMethod = _selectedPaymentMethod == "ONLINE" ? _selectedOnlineProvider : "COD";
 
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Order Placed via $finalMethod")));
+            Provider.of<OrderProvider>(context, listen: false).addOrder(
+              cart.items.values.toList(),
+              cart.totalAmount,
+              "${_fNameController.text} ${_lNameController.text}",
+              _emailController.text,
+              _addressController.text,
+              _phoneController.text,
+            );
+
             cart.clearCart();
-            Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            _showThankYouDialog();
           }
         },
-        child: const Text("Pay now", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        child: const Text("PAY NOW", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
       ),
     );
   }
