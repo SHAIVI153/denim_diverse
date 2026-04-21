@@ -7,6 +7,7 @@ import '../custom_drawer.dart';
 import '../layout_feature.dart';
 import '../widgets/denim_category_showcase.dart';
 import 'crazy_deals_screen.dart';
+import 'collection_screen.dart'; // Navigation ke liye import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,7 +21,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String selectedCategory = "ALL JEANS";
   final ScrollController _scrollController = ScrollController();
 
-  // FIX: Added 'id' and changed 'img' to 'image' and 'price' to 'originalPrice' to match ProductDetail logic
   final List<Map<String, dynamic>> arrivalProducts = [
     {'id': 'a1', 'name': 'PREMIUM HANGING DENIM', 'originalPrice': 1799.0, 'image': 'assets/images/premium_hanging.jpg'},
     {'id': 'a2', 'name': 'VINTAGE WASHED JEANS', 'originalPrice': 1899.0, 'image': 'assets/images/wintage_washed.jpg'},
@@ -67,7 +67,6 @@ class _HomeScreenState extends State<HomeScreen> {
             if (isWeb) _buildBlueTopBar(),
             _buildHeader(context, isWeb),
             _buildHero(width, isWeb),
-
             Container(
               width: double.infinity,
               color: Colors.white,
@@ -75,7 +74,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   const SizedBox(height: 40),
                   if (!isWeb) _buildCategoryChips(),
-
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: isWeb ? width * 0.1 : 20, vertical: 40),
                     child: Column(
@@ -87,19 +85,28 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-
                   _buildShopByCategory(width, isWeb),
-                  const DenimScrollingTicker(),
-
+                  // Rounded Ticker Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(50),
+                      child: const DenimScrollingTicker(),
+                    ),
+                  ),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: isWeb ? width * 0.1 : 20, vertical: 60),
                     child: _buildNewArrivalsVerticalSection(width, isWeb),
                   ),
-
                   _buildPromotionBanners(width, isWeb),
-
-                  const DenimScrollingTicker(),
-
+                  // Ticker before Reviews with rounding
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(50),
+                      child: const DenimScrollingTicker(),
+                    ),
+                  ),
                   const DenimReviews(),
                   _buildCommunitySection(isWeb),
                   _buildFooter(isWeb),
@@ -184,7 +191,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Text("The More You Buy, The More You Save", textAlign: TextAlign.center, style: GoogleFonts.montserrat(color: Colors.white, fontSize: isWeb ? 28 : 16, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 20),
-                        ElevatedButton(onPressed: () {}, style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), child: const Text("SHOP BY BUNDLE", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12))),
+                        ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => const CollectionScreen(initialCategory: "BUNDLE")));
+                            },
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                            child: const Text("SHOP BY BUNDLE", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12))
+                        ),
                       ],
                     ),
                   )
@@ -195,29 +208,34 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 15),
           Expanded(
             flex: 1,
-            child: Container(
-              height: h,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                image: const DecorationImage(image: AssetImage('assets/images/clearenss_jeans.jpg'), fit: BoxFit.cover),
-              ),
-              child: Stack(
-                children: [
-                  Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(25), color: Colors.black12)),
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text("LIMITED STOCK", style: TextStyle(color: Colors.white, fontSize: 8, letterSpacing: 2, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 5),
-                        Text("CLEARANCE", style: GoogleFonts.montserrat(color: Colors.white, fontSize: isWeb ? 36 : 18, fontWeight: FontWeight.w900)),
-                        Container(height: 4, width: 100, color: Colors.orange),
-                        const SizedBox(height: 10),
-                        const Text("up to 60% off", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500)),
-                      ],
-                    ),
-                  )
-                ],
+            child: InkWell(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const CollectionScreen(initialCategory: "CLEARANCE")));
+              },
+              child: Container(
+                height: h,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  image: const DecorationImage(image: AssetImage('assets/images/clearenss_jeans.jpg'), fit: BoxFit.cover),
+                ),
+                child: Stack(
+                  children: [
+                    Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(25), color: Colors.black12)),
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("LIMITED STOCK", style: TextStyle(color: Colors.white, fontSize: 8, letterSpacing: 2, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 5),
+                          Text("CLEARANCE", style: GoogleFonts.montserrat(color: Colors.white, fontSize: isWeb ? 36 : 18, fontWeight: FontWeight.w900)),
+                          Container(height: 4, width: 100, color: Colors.orange),
+                          const SizedBox(height: 10),
+                          const Text("up to 60% off", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
               ),
             ),
           ),
@@ -250,26 +268,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _categoryCard(String title, String subtitle, String tagline, String imgPath, bool isWeb) {
-    return Container(
-      height: isWeb ? 500 : 300,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), image: DecorationImage(image: AssetImage(imgPath), fit: BoxFit.cover)),
-      child: Stack(
-        children: [
-          Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), gradient: LinearGradient(begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [Colors.black.withOpacity(0.7), Colors.transparent]))),
-          Positioned(
-            bottom: 20, left: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(subtitle, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 5),
-                Text(title, style: GoogleFonts.montserrat(color: Colors.white, fontSize: isWeb ? 28 : 18, fontWeight: FontWeight.w900)),
-                const SizedBox(height: 5),
-                Text(tagline, style: const TextStyle(color: Colors.white70, fontSize: 9)),
-              ],
+    return InkWell(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => CollectionScreen(initialCategory: title)));
+      },
+      child: Container(
+        height: isWeb ? 500 : 300,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), image: DecorationImage(image: AssetImage(imgPath), fit: BoxFit.cover)),
+        child: Stack(
+          children: [
+            Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), gradient: LinearGradient(begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [Colors.black.withOpacity(0.7), Colors.transparent]))),
+            Positioned(
+              bottom: 20, left: 20,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(subtitle, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 5),
+                  Text(title, style: GoogleFonts.montserrat(color: Colors.white, fontSize: isWeb ? 28 : 18, fontWeight: FontWeight.w900)),
+                  const SizedBox(height: 5),
+                  Text(tagline, style: const TextStyle(color: Colors.white70, fontSize: 9)),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -313,13 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
     double price = product['originalPrice'];
     return InkWell(
       onTap: () {
-        // Create proper map for detail screen
-        Map<String, dynamic> dataForDetail = {
-          'id': product['id'],
-          'name': product['name'],
-          'price': price, // Passing correct price key
-          'image': product['image'],
-        };
+        Map<String, dynamic> dataForDetail = {'id': product['id'], 'name': product['name'], 'price': price, 'image': product['image']};
         Navigator.pushNamed(context, '/product-detail', arguments: dataForDetail);
       },
       child: Column(
@@ -331,13 +348,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text("Rs. ${price.toStringAsFixed(0)}", style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
           const SizedBox(height: 8),
           SizedBox(width: double.infinity, height: 35, child: ElevatedButton(onPressed: () {
-            Provider.of<CartProvider>(context, listen: false).addItem(
-                product['id'],
-                price,
-                product['name'],
-                product['image'],
-                "32"
-            );
+            Provider.of<CartProvider>(context, listen: false).addItem(product['id'], price, product['name'], product['image'], "32");
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("ADDED TO BAG"), backgroundColor: Colors.black));
           }, style: ElevatedButton.styleFrom(backgroundColor: Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)), elevation: 0), child: const Text("ADD TO BAG", style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)))),
         ],
@@ -393,13 +404,7 @@ class _HomeScreenState extends State<HomeScreen> {
     double discountedPrice = originalPrice * 0.60;
     return InkWell(
       onTap: () {
-        // FIX: Create proper map to match Detail Screen logic
-        Map<String, dynamic> dataForDetail = {
-          'id': data['id'],
-          'name': data['name'],
-          'price': discountedPrice, // Passing calculated price
-          'image': data['image'],
-        };
+        Map<String, dynamic> dataForDetail = {'id': data['id'], 'name': data['name'], 'price': discountedPrice, 'image': data['image']};
         Navigator.pushNamed(context, '/product-detail', arguments: dataForDetail);
       },
       child: Column(
@@ -469,7 +474,9 @@ class _DenimScrollingTickerState extends State<DenimScrollingTicker> {
   Widget build(BuildContext context) {
     final List<String> tickerItems = ["DENIM YOU'LL LOVE.", "QUALITY YOU CAN FEEL.", "STRETCH THAT LASTS.", "CRAFTED FOR COMFORT.", "BEYOND THE BLUE.", "PREMIUM FABRIC ONLY."];
     return Container(
-      height: 45, width: double.infinity, decoration: const BoxDecoration(color: Colors.black),
+      height: 45, width: double.infinity,
+      // Changed to Denim Navy Blue color
+      decoration: const BoxDecoration(color: Color(0xFF0D1B2A)),
       child: ListView.builder(
         controller: _tickerController, scrollDirection: Axis.horizontal, physics: const NeverScrollableScrollPhysics(), itemCount: 200,
         itemBuilder: (context, index) => Row(children: [const SizedBox(width: 50), Text(tickerItems[index % tickerItems.length], style: GoogleFonts.montserrat(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.5)), const SizedBox(width: 50), const Icon(Icons.circle, size: 4, color: Colors.orange)]),
