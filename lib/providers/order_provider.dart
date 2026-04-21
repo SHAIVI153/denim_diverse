@@ -4,7 +4,7 @@ import 'cart_provider.dart';
 class OrderItem {
   final String id;
   final double amount;
-  final List<CartItem> products; // Yeh CartItem use karega jisme 'size' pehle se hai
+  final List<CartItem> products;
   final DateTime dateTime;
   final String userName;
   final String userEmail;
@@ -28,6 +28,7 @@ class OrderProvider with ChangeNotifier {
 
   List<OrderItem> get orders => [..._orders];
 
+  // CHECK: Ensure all 6 parameters are here in this exact order
   void addOrder(List<CartItem> cartProducts, double total, String name, String email, String address, String phone) {
     _orders.insert(
       0,
@@ -35,13 +36,13 @@ class OrderProvider with ChangeNotifier {
         id: DateTime.now().toString(),
         amount: total,
         dateTime: DateTime.now(),
-        products: cartProducts, // Cart items copy ho rahe hain
+        products: cartProducts,
         userName: name,
         userEmail: email,
         userAddress: address,
         userPhone: phone,
       ),
     );
-    notifyListeners();
+    notifyListeners(); // Yeh line screen refresh karne ke liye zaroori hai
   }
 }
