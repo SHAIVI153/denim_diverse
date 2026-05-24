@@ -1,218 +1,246 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart'; // For better Date formatting
 import '../providers/order_provider.dart';
+import '../widgets/common_widgets.dart';
+import 'app_theme.dart';
 
 class OrderHistoryScreen extends StatelessWidget {
   const OrderHistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final orderData = Provider.of<OrderProvider>(context);
-    final orders = orderData.orders;
+    final orders = context.watch<OrderProvider>().orders;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9), // Light grey background
-      appBar: AppBar(
-        title: Text(
-          "ORDER HISTORY",
-          style: GoogleFonts.montserrat(
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 2,
-              color: Colors.black
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        iconTheme: const IconThemeData(color: Colors.black),
-      ),
+      backgroundColor: AppColors.white,
+      appBar: AppBar(title: const Text('MY ORDERS')),
       body: orders.isEmpty
-          ? _buildEmptyState(context)
+          ? EmptyState(
+        icon: Icons.receipt_long_outlined,
+        title: 'No orders yet',
+        subtitle: 'Your order history will\nappear here once you shop.',
+        buttonLabel: 'Start Shopping',
+        onButton: () =>
+            Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false),
+      )
           : ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+        padding: const EdgeInsets.all(20),
         itemCount: orders.length,
-        itemBuilder: (ctx, i) {
-          final order = orders[i];
-          return _buildOrderCard(context, order);
-        },
+        itemBuilder: (_, i) => _OrderCard(order: orders[i]),
       ),
     );
   }
+}
 
-  // --- EMPTY STATE ---
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.inventory_2_outlined, size: 60, color: Colors.grey.shade300),
-          const SizedBox(height: 15),
-          Text(
-            "NO ORDERS FOUND",
-            style: GoogleFonts.montserrat(
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-                color: Colors.grey[400]
-            ),
-          ),
-          const SizedBox(height: 10),
-          const Text("Your purchase history will appear here.", style: TextStyle(color: Colors.grey, fontSize: 12)),
-        ],
-      ),
-    );
-  }
+class _OrderCard extends StatefulWidget {
+  final OrderItem order;
 
-  // --- INDIVIDUAL ORDER CARD ---
-  Widget _buildOrderCard(BuildContext context, dynamic order) {
-    // Format: "12 Oct, 2023 04:30 PM"
-    String formattedDate = DateFormat('dd MMM, yyyy  hh:mm a').format(order.dateTime);
+  const _OrderCard({required this.order});
+
+  @override
+  State<_OrderCard> createState() => _OrderCardState();
+}
+
+class _OrderCardState extends State<_OrderCard> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final o = widget.order;
+    final date = DateFormat('dd MMM yyyy · hh:mm a').format(o.dateTime);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          )
-        ],
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Header: Order ID & Status
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "ORDER #DD${order.id.substring(order.id.length - 5).toUpperCase()}",
-                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(formattedDate, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
-                  ],
-                ),
-                _buildStatusBadge("PROCESSING"),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-
-          // 2. Product Thumbnails & Names
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Row(
-              children: [
-                // Thumbnail images preview (shows up to 3)
-                SizedBox(
-                  height: 50,
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    scrollDirection: Axis.horizontal,
-                    itemCount: order.products.length > 3 ? 3 : order.products.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: Image.asset(
-                            order.products[index].image,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                            errorBuilder: (c, e, s) => Container(color: Colors.grey[200], width: 50),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          // Header
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        order.products.map((p) => p.name).join(", "),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              o.id,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 12,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(date,
+                                style: const TextStyle(
+                                    color: AppColors.medGrey, fontSize: 11)),
+                          ],
+                        ),
                       ),
-                      Text(
-                        "${order.products.length} Items",
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                      _statusChip(o.status),
+                      const SizedBox(width: 12),
+                      Icon(
+                        _expanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        color: AppColors.medGrey,
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-
-          // 3. Footer: Total Amount & Action
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("TOTAL AMOUNT", style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
-                    Text(
-                      "Rs. ${order.amount.toStringAsFixed(0)}",
-                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Colors.black),
-                    ),
-                  ],
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    // Logic to view detail or reorder
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      _infoChip(
+                          '${o.products.length} ITEM${o.products.length > 1 ? 'S' : ''}'),
+                      const SizedBox(width: 8),
+                      _infoChip(o.paymentMethod),
+                      const Spacer(),
+                      Text(
+                        'Rs. ${o.amount.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
                   ),
-                  child: const Text("VIEW DETAILS", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
+
+          // Expanded Details
+          if (_expanded) ...[
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Products
+                  ...o.products.map((p) => Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: Container(
+                            width: 56,
+                            height: 68,
+                            color: AppColors.surface,
+                            child: Image.asset(p.image,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                const SizedBox()),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(p.name,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 11)),
+                              const SizedBox(height: 4),
+                              Text('Size: ${p.size} · Qty: ${p.quantity}',
+                                  style: const TextStyle(
+                                      color: AppColors.medGrey,
+                                      fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          'Rs. ${(p.price * p.quantity).toStringAsFixed(0)}',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  )),
+
+                  const Divider(),
+                  const SizedBox(height: 14),
+
+                  // Shipping Info
+                  const Text('SHIPPED TO',
+                      style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 2,
+                          color: AppColors.medGrey)),
+                  const SizedBox(height: 8),
+                  Text(o.name,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 13)),
+                  Text('${o.address}, ${o.city}',
+                      style: const TextStyle(
+                          color: AppColors.darkGrey, fontSize: 12)),
+                  Text(o.phone,
+                      style: const TextStyle(
+                          color: AppColors.darkGrey, fontSize: 12)),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  // --- STATUS BADGE ---
-  Widget _buildStatusBadge(String status) {
+  Widget _statusChip(String status) {
+    Color color;
+    switch (status) {
+      case 'Delivered':
+        color = AppColors.success;
+        break;
+      case 'Processing':
+        color = AppColors.gold;
+        break;
+      default:
+        color = AppColors.blue;
+    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(20),
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(2),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
-        status,
+        status.toUpperCase(),
         style: TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.w900,
-            color: Colors.blue.shade700,
-            letterSpacing: 0.5
+          color: color,
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1,
+        ),
+      ),
+    );
+  }
+
+  Widget _infoChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      color: AppColors.surface,
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1,
+          color: AppColors.darkGrey,
         ),
       ),
     );

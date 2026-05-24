@@ -1,24 +1,48 @@
 class Product {
   final String id;
   final String name;
-  final String description;
-  final String imageUrl;
-  final double price;
+  final String image;
+  final double originalPrice;
+  final double? discountedPrice;
   final String category;
+  final String? fit;
+  final double rating;
+  final int reviews;
+  final bool isNew;
+  final bool isOnSale;
+  final List<String> sizes;
+  final String description;
 
   Product({
     required this.id,
     required this.name,
-    required this.description,
-    required this.imageUrl,
-    required this.price,
+    required this.image,
+    required this.originalPrice,
+    this.discountedPrice,
     required this.category,
+    this.fit,
+    this.rating = 4.5,
+    this.reviews = 0,
+    this.isNew = false,
+    this.isOnSale = false,
+    this.sizes = const ['28', '30', '32', '34', '36', '38'],
+    this.description = '',
   });
-}
 
-// Dummy Data for Frontend Testing
-List<Product> dummyProducts = [
-  Product(id: '1', name: 'Relaxed Fit Jeans', description: 'Classic relaxed denim', imageUrl: 'assets/images/relaxed.jpg', price: 4500, category: 'RELAXED'),
-  Product(id: '2', name: 'Regular Fit Denim', description: 'Everyday comfort', imageUrl: 'assets/images/regular.jpg', price: 3800, category: 'REGULAR'),
-  Product(id: '3', name: 'Denim Joggers', description: 'Sporty denim style', imageUrl: 'assets/images/joggers.jpg', price: 3200, category: 'JOGGERS'),
-];
+  double get salePrice => discountedPrice ?? originalPrice * 0.6;
+  double get discountPercent =>
+      ((originalPrice - salePrice) / originalPrice * 100).roundToDouble();
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'name': name,
+    'image': image,
+    'price': salePrice,
+    'originalPrice': originalPrice,
+    'category': category,
+    'rating': rating,
+    'reviews': reviews,
+    'description': description,
+    'sizes': sizes,
+  };
+}

@@ -1,74 +1,115 @@
-import 'package:denim_diverse/screens/checkout_screen.dart';
-import 'package:denim_diverse/screens/home_screen.dart';
-import 'package:denim_diverse/screens/product_detail_screen.dart';
-import 'package:denim_diverse/screens/order_history_screen.dart'; // 1. Isay import karein
+import 'package:denim_diverse/screens/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'screens/cart_screen.dart';
+
+import 'login/login_screen.dart';
 import 'providers/cart_provider.dart';
 import 'providers/order_provider.dart';
+import 'screens/home_screen.dart';
+import 'screens/cart_screen.dart';
+import 'screens/checkout_screen.dart';
+import 'screens/collection_screen.dart';
+import 'screens/crazy_deals_screen.dart';
+import 'screens/order_history_screen.dart';
+import 'screens/product_detail_screen.dart';
+import 'screens/profile_screen.dart';
+
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ),
+  );
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => CartProvider()),
-        ChangeNotifierProvider(create: (context) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
       ],
-      child: const DenimDynasty(),
+      child: const DenimDiverseApp(),
     ),
   );
 }
 
-class DenimDynasty extends StatelessWidget {
-  const DenimDynasty({super.key});
+class DenimDiverseApp extends StatelessWidget {
+  const DenimDiverseApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Denim Dynasty',
+      title: 'DenimDiverse',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: Colors.white,
-        textTheme: GoogleFonts.montserratTextTheme(
-          Theme.of(context).textTheme,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          iconTheme: IconThemeData(color: Colors.black),
-        ),
+      theme: AppTheme.theme.copyWith(
+        textTheme: GoogleFonts.montserratTextTheme(AppTheme.theme.textTheme),
       ),
       initialRoute: '/',
-      onGenerateRoute: (settings) {
-        if (settings.name == '/') {
-          return MaterialPageRoute(builder: (_) => const HomeScreen());
-        }
-        if (settings.name == '/cart') {
-          return MaterialPageRoute(builder: (_) => const CartScreen());
-        }
-        if (settings.name == '/checkout') {
-          return MaterialPageRoute(builder: (_) => const CheckoutScreen());
-        }
-
-        // 2. YEH WALA BLOCK ADD KAREIN
-        if (settings.name == '/order-history') {
-          return MaterialPageRoute(builder: (_) => const OrderHistoryScreen());
-        }
-
-        if (settings.name == '/product-detail') {
-          if (settings.arguments is Map<String, dynamic>) {
-            final args = settings.arguments as Map<String, dynamic>;
-            return MaterialPageRoute(
-              builder: (_) => ProductDetailScreen(product: args),
-            );
-          }
-        }
-        return null;
-      },
-      // Note: initialRoute '/' aur home: dono aik sath na rakhein, initialRoute kafi hai.
+      onGenerateRoute: _generateRoute,
     );
   }
+
+  Route<dynamic>? _generateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/':
+        return _fade(const HomeScreen());
+
+      case '/cart':
+        return _slide(const CartScreen());
+
+      case '/checkout':
+        return _slide(const CheckoutScreen());
+
+      case '/collection':
+        final cat = settings.arguments as String?;
+        return _fade(CollectionScreen(initialCategory: cat));
+
+      case '/deals':
+        return _fade(const CrazyDealsScreen());
+
+      case '/orders':
+        return _slide(const OrderHistoryScreen());
+
+      case '/profile':
+        return _slide(const ProfileScreen());
+
+      case '/login':
+        return _slide(const LoginScreen());
+
+      case '/product-detail':
+        if (settings.arguments is Map<String, dynamic>) {
+          return _slide(
+            ProductDetailScreen(
+              product: settings.arguments as Map<String, dynamic>,
+            ),
+          );
+        }
+        return _fade(const HomeScreen());
+
+      default:
+        return _fade(const HomeScreen());
+    }
+  }
+
+  PageRoute _fade(Widget page) => PageRouteBuilder(
+    pageBuilder: (_, __, ___) => page,
+    transitionsBuilder: (_, anim, __, child) =>
+        FadeTransition(opacity: anim, child: child),
+    transitionDuration: const Duration(milliseconds: 250),
+  );
+
+  PageRoute _slide(Widget page) => PageRouteBuilder(
+    pageBuilder: (_, __, ___) => page,
+    transitionsBuilder: (_, anim, __, child) => SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(1.0, 0.0),
+        end: Offset.zero,
+      ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+      child: child,
+    ),
+    transitionDuration: const Duration(milliseconds: 300),
+  );
 }

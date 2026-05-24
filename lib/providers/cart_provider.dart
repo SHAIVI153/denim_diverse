@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 class CartItem {
   final String id;
@@ -9,7 +9,7 @@ class CartItem {
   final String image;
   final String size;
 
-  CartItem({
+  const CartItem({
     required this.id,
     required this.name,
     required this.quantity,
@@ -18,60 +18,62 @@ class CartItem {
     required this.image,
     required this.size,
   });
+
+  CartItem copyWith({int? quantity}) => CartItem(
+    id: id,
+    name: name,
+    quantity: quantity ?? this.quantity,
+    price: price,
+    originalPrice: originalPrice,
+    image: image,
+    size: size,
+  );
 }
 
 class CartProvider with ChangeNotifier {
-  Map<String, CartItem> _items = {};
+  final Map<String, CartItem> _items = {};
 
   Map<String, CartItem> get items => {..._items};
-  int get itemCount => _items.length;
+  int get itemCount => _items.values.fold(0, (sum, item) => sum + item.quantity);
+  int get uniqueCount => _items.length;
 
-  double get totalAmount {
-    var total = 0.0;
-    _items.forEach((key, cartItem) => total += cartItem.price * cartItem.quantity);
-    return total;
-  }
+  double get totalAmount =>
+      _items.values.fold(0.0, (sum, item) => sum + item.price * item.quantity);
 
-  // Elo style UI ke liye getter
-  double get totalAmountAfterDiscount => totalAmount;
+  double get totalSavings => _items.values
+      .fold(0.0, (sum, item) => sum + (item.originalPrice - item.price) * item.quantity);
 
-  void addItem(String productId, double price, String title, String imageUrl, String selectedSize) {
-    double oldPrice = price / 0.6;
+  bool contains(String productId) => _items.containsKey(productId);
 
+  void addItem(String productId, double price, String title, String imageUrl, String size) {
+    final double originalPrice = price / 0.6;
     if (_items.containsKey(productId)) {
-      _items.update(
-        productId,
-            (existing) => CartItem(
-          id: existing.id,
-          name: existing.name,
-          price: existing.price,
-          originalPrice: existing.originalPrice,
-          image: existing.image,
-          quantity: existing.quantity + 1,
-          size: existing.size,
-        ),
-      );
+      _items.update(productId, (e) => e.copyWith(quantity: e.quantity + 1));
     } else {
-      _items.putIfAbsent(
-        productId,
-            () => CartItem(
-          id: productId,
-          name: title,
-          price: price,
-          originalPrice: oldPrice,
-          image: imageUrl,
-          quantity: 1,
-          size: selectedSize,
-        ),
+      _items[productId] = CartItem(
+        id: productId,
+        name: title,
+        price: price,
+        originalPrice: originalPrice,
+        image: imageUrl,
+        quantity: 1,
+        size: size,
       );
     }
     notifyListeners();
   }
 
-  void removeSingleItem(String productId) {
+  void increaseQuantity(String productId) {
+    if (_items.containsKey(productId)) {
+      _items.update(productId, (e) => e.copyWith(quantity: e.quantity + 1));
+      notifyListeners();
+    }
+  }
+
+  void decreaseQuantity(String productId) {
     if (!_items.containsKey(productId)) return;
     if (_items[productId]!.quantity > 1) {
-      _items.update(productId, (existing) => CartItem(id: existing.id, name: existing.name, price: existing.price, originalPrice: existing.originalPrice, image: existing.image, quantity: existing.quantity - 1, size: existing.size));
+      _items.update(productId, (e) => e.copyWith(quantity: e.quantity - 1));
     } else {
       _items.remove(productId);
     }
@@ -84,7 +86,7 @@ class CartProvider with ChangeNotifier {
   }
 
   void clearCart() {
-    _items = {};
+    _items.clear();
     notifyListeners();
   }
 }

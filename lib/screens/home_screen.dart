@@ -1,13 +1,14 @@
+import 'package:denim_diverse/screens/product_data.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../providers/cart_provider.dart';
-import '../../providers/denim_reviews.dart';
-import '../custom_drawer.dart';
-import '../layout_feature.dart';
-import '../widgets/denim_category_showcase.dart';
+import '../product.dart';
+import '../providers/cart_provider.dart';
+import '../widgets/common_widgets.dart';
+import '../widgets/product_card.dart';
+import 'app_drawer.dart';
+import 'app_theme.dart';
+import 'collection_screen.dart';
 import 'crazy_deals_screen.dart';
-import 'collection_screen.dart'; // Navigation ke liye import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,249 +18,815 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String searchQuery = "";
-  String selectedCategory = "ALL JEANS";
-  final ScrollController _scrollController = ScrollController();
-
-  final List<Map<String, dynamic>> arrivalProducts = [
-    {'id': 'a1', 'name': 'PREMIUM HANGING DENIM', 'originalPrice': 1799.0, 'image': 'assets/images/premium_hanging.jpg'},
-    {'id': 'a2', 'name': 'VINTAGE WASHED JEANS', 'originalPrice': 1899.0, 'image': 'assets/images/wintage_washed.jpg'},
-    {'id': 'a3', 'name': 'DARK INDIGO SLIM', 'originalPrice': 1699.0, 'image': 'assets/images/indigo.jpg'},
-    {'id': 'a4', 'name': 'STREETWEAR BAGGY', 'originalPrice': 1999.0, 'image': 'assets/images/streetwear_baggy.jpg'},
-    {'id': 'a5', 'name': 'CLASSIC STRAIGHT CUT', 'originalPrice': 1799.0, 'image': 'assets/images/straight_wear.jpg'},
-    {'id': 'a6', 'name': 'RETRO LIGHT BLUE', 'originalPrice': 1999.0, 'image': 'assets/images/retro_light.jpg'},
-  ];
-
-  final List<Map<String, dynamic>> fitsData = [
-    {'id': '1', 'name': 'VINTAGE BOOT CUT', 'image': 'assets/images/bootcut.jpg', 'originalPrice': 4330.0, 'category': 'MEN', 'rating': 4.5, 'reviews': 12},
-    {'id': '2', 'name': 'HIGH WAIST MOM FIT', 'image': 'assets/images/momfit.jpg', 'originalPrice': 4665.0, 'category': 'WOMEN', 'rating': 4.8, 'reviews': 25},
-    {'id': '3', 'name': 'BOYFRIEND DENIM', 'image': 'assets/images/boyfriend.jpg', 'originalPrice': 4998.0, 'category': 'WOMEN', 'rating': 4.2, 'reviews': 8},
-    {'id': '4', 'name': 'STREET BAGGY', 'image': 'assets/images/baggy.jpg', 'originalPrice': 5498.0, 'category': 'MEN', 'rating': 4.6, 'reviews': 19},
-  ];
-
-  final List<String> categories = ["ALL JEANS", "MEN", "WOMEN", "CRAZY DEALS", "NEW ARRIVALS"];
+  final ScrollController _scroll = ScrollController();
+  String _selectedCategory = 'ALL';
+  final GlobalKey _productsKey = GlobalKey();
 
   void _scrollToProducts() {
-    _scrollController.animateTo(650, duration: const Duration(milliseconds: 800), curve: Curves.easeInOut);
+    final ctx = _productsKey.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(ctx,
+          duration: const Duration(milliseconds: 700), curve: Curves.easeInOut);
+    }
+  }
+
+  List<Product> get _filteredProducts {
+    final all = ProductData.allProducts;
+    if (_selectedCategory == 'ALL') return all;
+    return all.where((p) => p.category == _selectedCategory).toList();
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
-    bool isWeb = width > 950;
+    final w = MediaQuery.of(context).size.width;
+    final isWeb = w > 900;
+    final cart = context.watch<CartProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A192F),
-      drawer: DenimDiverseDrawer(
-        onCategorySelected: (category) {
-          if (category == "CRAZY DEALS") {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const CrazyDealsScreen()));
-          } else {
-            setState(() => selectedCategory = category);
-            _scrollToProducts();
-          }
-        },
-      ),
-      body: LayoutFeature(
-        controller: _scrollController,
-        child: Column(
-          children: [
-            if (isWeb) _buildBlueTopBar(),
-            _buildHeader(context, isWeb),
-            _buildHero(width, isWeb),
-            Container(
-              width: double.infinity,
-              color: Colors.white,
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  if (!isWeb) _buildCategoryChips(),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: isWeb ? width * 0.1 : 20, vertical: 40),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSectionHeader(selectedCategory),
-                        const SizedBox(height: 40),
-                        _buildProductGrid(isWeb),
-                      ],
-                    ),
-                  ),
-                  _buildShopByCategory(width, isWeb),
-                  // Rounded Ticker Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(50),
-                      child: const DenimScrollingTicker(),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: isWeb ? width * 0.1 : 20, vertical: 60),
-                    child: _buildNewArrivalsVerticalSection(width, isWeb),
-                  ),
-                  _buildPromotionBanners(width, isWeb),
-                  // Ticker before Reviews with rounding
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(50),
-                      child: const DenimScrollingTicker(),
-                    ),
-                  ),
-                  const DenimReviews(),
-                  _buildCommunitySection(isWeb),
-                  _buildFooter(isWeb),
-                ],
+      backgroundColor: AppColors.white,
+      drawer: const AppDrawer(),
+      body: CustomScrollView(
+        controller: _scroll,
+        slivers: [
+          // ── Top Banner ──
+          if (isWeb)
+            SliverToBoxAdapter(child: _topBanner()),
+
+          // ── App Bar ──
+          SliverAppBar(
+            pinned: true,
+            floating: false,
+            backgroundColor: AppColors.white,
+            elevation: 0,
+            scrolledUnderElevation: 1,
+            surfaceTintColor: Colors.transparent,
+            leading: Builder(
+              builder: (ctx) => IconButton(
+                icon: const Icon(Icons.menu, color: AppColors.black),
+                onPressed: () => Scaffold.of(ctx).openDrawer(),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
+            title: const Text(
+              'DenimDiverse.',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 20,
+                color: AppColors.black,
+                letterSpacing: -0.5,
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.search, color: AppColors.black),
+                onPressed: () {},
+              ),
+              Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.shopping_bag_outlined,
+                        color: AppColors.black),
+                    onPressed: () => Navigator.pushNamed(context, '/cart'),
+                  ),
+                  if (cart.uniqueCount > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: const BoxDecoration(
+                          color: AppColors.black,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${cart.uniqueCount}',
+                            style: const TextStyle(
+                                color: AppColors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
 
-  Widget _buildCommunitySection(bool isWeb) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 60),
-      child: Column(
-        children: [
-          const Text("SHOP THE LOOK", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
-          const SizedBox(height: 10),
-          Text("Our Community", style: GoogleFonts.montserrat(fontSize: isWeb ? 32 : 26, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 40),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: isWeb ? 40 : 10),
-            child: Wrap(
-              spacing: 15,
-              runSpacing: 20,
-              alignment: WrapAlignment.center,
-              children: [
-                _communityCard("@SHAWAIZ_N", 'assets/images/denim_community1.jpg', isWeb),
-                _communityCard("@ASAD_MUSTAFA", 'assets/images/denim_community2.jpg', isWeb),
-                _communityCard("@DENIM_STYLE", 'assets/images/denim_community3.jpg', isWeb),
-                _communityCard("@DIVERSE_LOOK", 'assets/images/denim_community4.jpg', isWeb),
+          // ── Hero Section ──
+          SliverToBoxAdapter(child: _hero(w, isWeb)),
+
+          // ── Scrolling Ticker ──
+          const SliverToBoxAdapter(
+            child: ScrollingTicker(
+              items: [
+                "FREE DELIVERY ON ORDERS OVER RS. 5000",
+                "PREMIUM DENIM ONLY.",
+                "QUALITY YOU CAN FEEL.",
+                "NEW COLLECTION 2026.",
+                "BEYOND THE BLUE.",
               ],
             ),
-          )
+          ),
+
+          // ── Shop By Category ──
+          SliverToBoxAdapter(
+            child: _shopByCategory(w, isWeb),
+          ),
+
+          // ── Category Filter Chips ──
+          SliverToBoxAdapter(
+            child: _categoryChips(isWeb, w),
+          ),
+
+          // ── Product Grid Header ──
+          SliverToBoxAdapter(
+            child: Padding(
+              key: _productsKey,
+              padding: EdgeInsets.fromLTRB(
+                isWeb ? w * 0.08 : 20,
+                40,
+                isWeb ? w * 0.08 : 20,
+                20,
+              ),
+              child: SectionHeader(
+                label: 'Our Best Sellers',
+                title: _selectedCategory == 'ALL'
+                    ? 'All Jeans'
+                    : _selectedCategory == 'MEN'
+                    ? "Men's Denim"
+                    : "Women's Denim",
+                action: 'VIEW ALL',
+                onAction: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CollectionScreen()),
+                ),
+              ),
+            ),
+          ),
+
+          // ── Product Grid ──
+          SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: isWeb ? w * 0.08 : 20),
+            sliver: SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: isWeb ? 4 : 2,
+                childAspectRatio: isWeb ? 0.62 : 0.55,
+                mainAxisSpacing: 30,
+                crossAxisSpacing: 16,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                    (ctx, i) {
+                  final product = _filteredProducts[i];
+                  return ProductCard(
+                    product: product,
+                    onTap: () => Navigator.pushNamed(
+                      context,
+                      '/product-detail',
+                      arguments: product.toMap(),
+                    ),
+                  );
+                },
+                childCount: _filteredProducts.length,
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 60)),
+
+          // ── Ticker ──
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: ScrollingTicker(
+                items: [
+                  "STRETCH THAT LASTS.",
+                  "CRAFTED FOR COMFORT.",
+                  "PREMIUM FABRIC ONLY.",
+                  "THE DENIM EDIT 2026.",
+                ],
+                rounded: true,
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 60)),
+
+          // ── New Arrivals ──
+          SliverToBoxAdapter(
+            child: _newArrivals(w, isWeb),
+          ),
+
+          // ── Promo Banners ──
+          SliverToBoxAdapter(child: _promoBanners(w, isWeb)),
+
+          // ── Ticker ──
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: ScrollingTicker(
+                items: [
+                  "MADE TO MOVE WITH YOU.",
+                  "RESPONSIBLY SOURCED DENIM.",
+                  "ZERO COMPROMISE ON QUALITY.",
+                ],
+                rounded: true,
+              ),
+            ),
+          ),
+
+          // ── Reviews ──
+          SliverToBoxAdapter(child: _reviews(isWeb, w)),
+
+          // ── Community ──
+          SliverToBoxAdapter(child: _community(isWeb, w)),
+
+          // ── Footer ──
+          SliverToBoxAdapter(child: _footer(isWeb)),
         ],
       ),
     );
   }
 
-  Widget _communityCard(String handle, String imgPath, bool isWeb) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double cardWidth = isWeb ? (screenWidth * 0.75) / 4 - 20 : (screenWidth / 2) - 25;
-
-    return Column(
-      children: [
-        Container(
-          width: cardWidth,
-          height: cardWidth * 1.3,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF6F6F6),
-            borderRadius: BorderRadius.circular(8),
-            image: DecorationImage(image: AssetImage(imgPath), fit: BoxFit.cover),
-          ),
+  Widget _topBanner() => Container(
+    height: 36,
+    color: AppColors.blue,
+    child: const Center(
+      child: Text(
+        'FREE DELIVERY ON ALL ORDERS OVER RS. 5000  ·  SHOP NOW',
+        style: TextStyle(
+          color: AppColors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.5,
         ),
-        const SizedBox(height: 10),
-        Text(handle, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black54)),
-      ],
-    );
-  }
+      ),
+    ),
+  );
 
-  Widget _buildPromotionBanners(double width, bool isWeb) {
-    double h = isWeb ? 450 : 250;
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: isWeb ? width * 0.1 : 20, vertical: 30),
-      child: Row(
+  Widget _hero(double w, bool isWeb) {
+    return Container(
+      width: double.infinity,
+      height: isWeb ? 680 : 520,
+      color: AppColors.navy,
+      child: Stack(
         children: [
-          Expanded(
-            flex: 2,
-            child: Container(
-              height: h,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                image: const DecorationImage(image: AssetImage('assets/images/hangging_banner.jpg'), fit: BoxFit.cover),
-              ),
-              child: Stack(
-                children: [
-                  Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(25), color: Colors.black26)),
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("The More You Buy, The More You Save", textAlign: TextAlign.center, style: GoogleFonts.montserrat(color: Colors.white, fontSize: isWeb ? 28 : 16, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => const CollectionScreen(initialCategory: "BUNDLE")));
-                            },
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                            child: const Text("SHOP BY BUNDLE", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12))
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.75,
+              child: Image.asset('assets/images/denim_diverse.jpg',
+                  fit: BoxFit.cover),
             ),
           ),
-          const SizedBox(width: 15),
-          Expanded(
-            flex: 1,
-            child: InkWell(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const CollectionScreen(initialCategory: "CLEARANCE")));
-              },
-              child: Container(
-                height: h,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
-                  image: const DecorationImage(image: AssetImage('assets/images/clearenss_jeans.jpg'), fit: BoxFit.cover),
-                ),
-                child: Stack(
-                  children: [
-                    Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(25), color: Colors.black12)),
-                    Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("LIMITED STOCK", style: TextStyle(color: Colors.white, fontSize: 8, letterSpacing: 2, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 5),
-                          Text("CLEARANCE", style: GoogleFonts.montserrat(color: Colors.white, fontSize: isWeb ? 36 : 18, fontWeight: FontWeight.w900)),
-                          Container(height: 4, width: 100, color: Colors.orange),
-                          const SizedBox(height: 10),
-                          const Text("up to 60% off", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500)),
-                        ],
-                      ),
-                    )
+          // Gradient overlay
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerRight,
+                  end: Alignment.centerLeft,
+                  colors: [
+                    Colors.transparent,
+                    AppColors.navy.withOpacity(0.7),
                   ],
                 ),
               ),
             ),
           ),
+          // Content
+          Positioned(
+            left: isWeb ? w * 0.08 : 28,
+            bottom: isWeb ? 100 : 60,
+            right: isWeb ? w * 0.4 : 28,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'COLLECTION 2026',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.gold,
+                    letterSpacing: 4,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'BEYOND\nTHE BLUE',
+                  style: TextStyle(
+                    fontSize: isWeb ? 80 : 52,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.white,
+                    height: 0.9,
+                    letterSpacing: -2,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Premium denim crafted for the ones\nwho dare to stand apart.',
+                  style: TextStyle(
+                    color: AppColors.lightGrey,
+                    fontSize: 13,
+                    height: 1.6,
+                  ),
+                ),
+                const SizedBox(height: 36),
+                Row(
+                  children: [
+                    _heroBtn('EXPLORE NOW', AppColors.white, AppColors.black,
+                        _scrollToProducts),
+                    const SizedBox(width: 16),
+                    _heroBtn('VIEW DEALS', Colors.transparent, AppColors.white,
+                            () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const CrazyDealsScreen()),
+                        )),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildShopByCategory(double width, bool isWeb) {
+  Widget _heroBtn(
+      String label, Color bg, Color text, VoidCallback onPressed) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        decoration: BoxDecoration(
+          color: bg,
+          border: Border.all(color: AppColors.white.withOpacity(0.5)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: text,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 2,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _shopByCategory(double w, bool isWeb) {
+    final cats = [
+      {'label': 'MEN', 'image': 'assets/images/cat_men.jpg'},
+      {'label': 'WOMEN', 'image': 'assets/images/cat_women.jpg'},
+      {'label': 'KIDS', 'image': 'assets/images/cat_kids.jpg'},
+    ];
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: isWeb ? width * 0.1 : 20, vertical: 60),
+      color: AppColors.surface,
+      padding: EdgeInsets.symmetric(
+          horizontal: isWeb ? w * 0.08 : 20, vertical: 60),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("FIND EVERYTHING YOU NEED IN ONE PLACE", style: GoogleFonts.montserrat(fontSize: 10, letterSpacing: 2, fontWeight: FontWeight.bold, color: Colors.grey[600])),
-          const SizedBox(height: 10),
-          Text("SHOP BY CATEGORY", style: GoogleFonts.montserrat(fontSize: isWeb ? 32 : 24, fontWeight: FontWeight.w900, color: Colors.black)),
-          const SizedBox(height: 40),
+          const SectionHeader(label: 'Explore', title: 'Shop By Category'),
+          const SizedBox(height: 32),
+          isWeb
+              ? Row(
+            children: cats
+                .map((c) => Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                    right: c == cats.last ? 0 : 16),
+                child: _categoryCard(c['label']!, c['image']!),
+              ),
+            ))
+                .toList(),
+          )
+              : Column(
+            children: cats
+                .map((c) => Padding(
+              padding: EdgeInsets.only(
+                  bottom: c == cats.last ? 0 : 16),
+              child: _categoryCard(c['label']!, c['image']!),
+            ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _categoryCard(String label, String image) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CollectionScreen(initialCategory: label),
+        ),
+      ),
+      child: Stack(
+        children: [
+          Container(
+            height: 240,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.navyLight,
+              borderRadius: BorderRadius.circular(4),
+              image: DecorationImage(
+                image: AssetImage(image),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    AppColors.black.withOpacity(0.7),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: Row(
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(Icons.arrow_forward, color: AppColors.white, size: 20),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _categoryChips(bool isWeb, double w) {
+    final cats = ['ALL', 'MEN', 'WOMEN'];
+    return Container(
+      color: AppColors.white,
+      padding: EdgeInsets.fromLTRB(
+          isWeb ? w * 0.08 : 20, 40, isWeb ? w * 0.08 : 20, 0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: cats.map((cat) {
+            final selected = _selectedCategory == cat;
+            return Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: GestureDetector(
+                onTap: () {
+                  if (cat == 'DEALS') {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const CrazyDealsScreen()));
+                  } else {
+                    setState(() => _selectedCategory = cat);
+                  }
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 22, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: selected ? AppColors.black : AppColors.surface,
+                    borderRadius: BorderRadius.circular(2),
+                    border: Border.all(
+                      color: selected ? AppColors.black : AppColors.border,
+                    ),
+                  ),
+                  child: Text(
+                    cat == 'ALL' ? 'ALL JEANS' : cat,
+                    style: TextStyle(
+                      color: selected ? AppColors.white : AppColors.darkGrey,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 10,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _newArrivals(double w, bool isWeb) {
+    final arrivals = ProductData.newArrivals;
+    return Container(
+      color: AppColors.white,
+      padding: EdgeInsets.symmetric(
+          horizontal: isWeb ? w * 0.08 : 20, vertical: 60),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            label: 'Just Dropped',
+            title: 'New Arrivals',
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            height: isWeb ? 380 : 280,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: arrivals.length,
+              itemBuilder: (_, i) {
+                final p = arrivals[i];
+                return GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, '/product-detail',
+                      arguments: p.toMap()),
+                  child: Container(
+                    width: isWeb ? 220 : 160,
+                    margin: EdgeInsets.only(
+                        right: i == arrivals.length - 1 ? 0 : 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Image.asset(p.image,
+                                        fit: BoxFit.cover),
+                                  ),
+                                ),
+                                const Positioned(
+                                  top: 10,
+                                  left: 10,
+                                  child: DiscountBadge(
+                                      label: 'NEW', color: AppColors.blue),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          p.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 10,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Rs. ${p.originalPrice.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _promoBanners(double w, bool isWeb) {
+    return Container(
+      color: AppColors.surface,
+      padding: EdgeInsets.symmetric(
+          horizontal: isWeb ? w * 0.08 : 20, vertical: 60),
+      child: isWeb
+          ? Row(children: [
+        Expanded(child: _promoBanner(
+            'assets/images/clearenss_jeans.jpg',
+            'CLEARANCE SALE',
+            'Up to 70% Off on selected styles',
+            'SHOP CLEARANCE',
+                () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const CrazyDealsScreen())))),
+        const SizedBox(width: 20),
+        Expanded(child: _promoBanner(
+            'assets/images/premium_hanging.jpg',
+            'PREMIUM COLLECTION',
+            'Crafted from the finest denim',
+            'EXPLORE NOW',
+                () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const CollectionScreen())))),
+      ])
+          : Column(children: [
+        _promoBanner(
+            'assets/images/clearenss_jeans.jpg',
+            'CLEARANCE SALE',
+            'Up to 70% Off on selected styles',
+            'SHOP CLEARANCE',
+                () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const CrazyDealsScreen()))),
+        const SizedBox(height: 16),
+        _promoBanner(
+            'assets/images/premium_hanging.jpg',
+            'PREMIUM COLLECTION',
+            'Crafted from the finest denim',
+            'EXPLORE NOW',
+                () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const CollectionScreen()))),
+      ]),
+    );
+  }
+
+  Widget _promoBanner(String img, String label, String sub, String btn,
+      VoidCallback onTap) {
+    return Container(
+      height: 260,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        image: DecorationImage(image: AssetImage(img), fit: BoxFit.cover),
+      ),
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.transparent, AppColors.black.withOpacity(0.8)],
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 24,
+            left: 24,
+            right: 24,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: const TextStyle(
+                        color: AppColors.gold,
+                        fontSize: 10,
+                        letterSpacing: 3,
+                        fontWeight: FontWeight.w800)),
+                const SizedBox(height: 6),
+                Text(sub,
+                    style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900)),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: onTap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    color: AppColors.white,
+                    child: Text(btn,
+                        style: const TextStyle(
+                            color: AppColors.black,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _reviews(bool isWeb, double w) {
+    final reviews = ProductData.reviews;
+    return Container(
+      color: AppColors.white,
+      padding: EdgeInsets.symmetric(
+          horizontal: isWeb ? w * 0.08 : 20, vertical: 60),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(label: 'What They Say', title: 'Customer Reviews'),
+          const SizedBox(height: 32),
+          isWeb
+              ? Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: reviews
+                .map((r) => Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                    right: r == reviews.last ? 0 : 16),
+                child: _reviewCard(r),
+              ),
+            ))
+                .toList(),
+          )
+              : Column(
+            children: reviews
+                .map((r) => Padding(
+              padding: EdgeInsets.only(
+                  bottom: r == reviews.last ? 0 : 16),
+              child: _reviewCard(r),
+            ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _reviewCard(Map<String, dynamic> r) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          StarRating(rating: r['rating'].toDouble()),
+          const SizedBox(height: 12),
+          Text(
+            '"${r['comment']}"',
+            style: const TextStyle(
+              fontSize: 12,
+              height: 1.6,
+              color: AppColors.darkGrey,
+            ),
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _categoryCard("MEN", "MODERN ELITE", "Style Redefined", "assets/images/cat_men.jpg", isWeb)),
-              const SizedBox(width: 15),
-              Expanded(child: _categoryCard("WOMEN", "DAILY EASE", "Made For Comfort", "assets/images/cat_women.jpg", isWeb)),
-              const SizedBox(width: 15),
-              Expanded(child: _categoryCard("KIDS", "DAILY FUN", "Designed For Activity", "assets/images/cat_kids.jpg", isWeb)),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: AppColors.navy,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    r['name'][0],
+                    style: const TextStyle(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(r['name'],
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 12)),
+                  Text('Bought: ${r['product']}',
+                      style: const TextStyle(
+                          color: AppColors.medGrey, fontSize: 10)),
+                ],
+              ),
+              const Spacer(),
+              Text(r['date'],
+                  style: const TextStyle(
+                      color: AppColors.lightGrey, fontSize: 9)),
             ],
           ),
         ],
@@ -267,220 +834,186 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _categoryCard(String title, String subtitle, String tagline, String imgPath, bool isWeb) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => CollectionScreen(initialCategory: title)));
-      },
-      child: Container(
-        height: isWeb ? 500 : 300,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), image: DecorationImage(image: AssetImage(imgPath), fit: BoxFit.cover)),
-        child: Stack(
-          children: [
-            Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), gradient: LinearGradient(begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [Colors.black.withOpacity(0.7), Colors.transparent]))),
-            Positioned(
-              bottom: 20, left: 20,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _community(bool isWeb, double w) {
+    return Container(
+      color: AppColors.surface,
+      padding: EdgeInsets.symmetric(
+          horizontal: isWeb ? w * 0.08 : 20, vertical: 60),
+      child: Column(
+        children: [
+          const Text(
+            'SHOP THE LOOK',
+            style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: AppColors.medGrey,
+                letterSpacing: 3),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Our Community',
+            style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Tag us @denimdiv_pk to be featured',
+            style: TextStyle(color: AppColors.medGrey, fontSize: 12),
+          ),
+          const SizedBox(height: 32),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: isWeb ? 4 : 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            children: [
+              'assets/images/community_jeans.jpeg',
+              'assets/images/hangging_banner.jpg',
+              'assets/images/banner_jeans.jpg',
+              'assets/images/jeans_fit.jpg',
+            ]
+                .map((img) => Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                image: DecorationImage(
+                  image: AssetImage(img),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: Stack(
                 children: [
-                  Text(subtitle, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 5),
-                  Text(title, style: GoogleFonts.montserrat(color: Colors.white, fontSize: isWeb ? 28 : 18, fontWeight: FontWeight.w900)),
-                  const SizedBox(height: 5),
-                  Text(tagline, style: const TextStyle(color: Colors.white70, fontSize: 9)),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      color: AppColors.navy.withOpacity(0.1),
+                    ),
+                  ),
+                  const Positioned(
+                    bottom: 10,
+                    left: 10,
+                    child: Icon(Icons.add_circle_outline,
+                        color: AppColors.white, size: 22),
+                  ),
                 ],
               ),
+            ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _footer(bool isWeb) {
+    return Container(
+      color: AppColors.charcoal,
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 40),
+      child: Column(
+        children: [
+          isWeb
+              ? Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _footerBrand()),
+              Expanded(child: _footerLinks('SHOP', ['Men', 'Women', 'Kids', 'New Arrivals', 'Crazy Deals'])),
+              Expanded(child: _footerLinks('HELP', ['Track Order', 'Returns', 'Size Guide', 'Contact Us', 'FAQ'])),
+              Expanded(child: _footerLinks('COMPANY', ['About Us', 'Sustainability', 'Careers', 'Press', 'Blog'])),
+            ],
+          )
+              : Column(
+            children: [
+              _footerBrand(),
+              const SizedBox(height: 40),
+              _footerLinks('SHOP', ['Men', 'Women', 'Kids', 'New Arrivals']),
+            ],
+          ),
+          const SizedBox(height: 48),
+          const Divider(color: Color(0xFF2A2A2A)),
+          const SizedBox(height: 24),
+          const Text(
+            '© 2026 DENIM DIVERSE — BY SHAIWICODE. ALL RIGHTS RESERVED.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFF444444),
+              fontSize: 9,
+              letterSpacing: 1.5,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _footerBrand() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'DenimDiverse.',
+          style: TextStyle(
+            color: AppColors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'Premium denim for the ones\nwho dare to stand apart.',
+          style: TextStyle(color: AppColors.medGrey, fontSize: 12, height: 1.7),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            _socialIcon(Icons.play_circle_outline, Colors.red),
+            const SizedBox(width: 16),
+            _socialIcon(Icons.camera_alt_outlined, Colors.pinkAccent),
+            const SizedBox(width: 16),
+            _socialIcon(Icons.facebook, Colors.blueAccent),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildNewArrivalsVerticalSection(double width, bool isWeb) {
-    double sectionHeight = isWeb ? 750 : 600;
-    return SizedBox(
-      height: sectionHeight,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: isWeb ? width * 0.30 : width * 0.40, height: sectionHeight,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), image: const DecorationImage(image: AssetImage('assets/images/jeans_fit.jpg'), fit: BoxFit.cover)),
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), gradient: LinearGradient(begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [Colors.black.withOpacity(0.8), Colors.transparent])),
-              child: Column(mainAxisAlignment: MainAxisAlignment.end, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text("2026 EDITION", style: GoogleFonts.montserrat(fontSize: 10, color: Colors.white70, letterSpacing: 2, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 5),
-                Text("THE\nDENIM\nEDIT", style: GoogleFonts.montserrat(fontSize: isWeb ? 32 : 20, fontWeight: FontWeight.w900, color: Colors.white, height: 1.1)),
-              ]),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.only(left: 20),
-              child: GridView.builder(
-                padding: EdgeInsets.zero, itemCount: arrivalProducts.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: isWeb ? 2 : 1, childAspectRatio: isWeb ? 0.65 : 0.8, crossAxisSpacing: 15, mainAxisSpacing: 20),
-                itemBuilder: (context, index) => _buildArrivalItem(arrivalProducts[index]),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildArrivalItem(Map<String, dynamic> product) {
-    double price = product['originalPrice'];
-    return InkWell(
-      onTap: () {
-        Map<String, dynamic> dataForDetail = {'id': product['id'], 'name': product['name'], 'price': price, 'image': product['image']};
-        Navigator.pushNamed(context, '/product-detail', arguments: dataForDetail);
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: Container(decoration: BoxDecoration(color: const Color(0xFFF6F6F6), borderRadius: BorderRadius.circular(4), image: DecorationImage(image: AssetImage(product['image']), fit: BoxFit.cover)))),
-          const SizedBox(height: 10),
-          Text(product['name'], maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.black87)),
-          Text("Rs. ${price.toStringAsFixed(0)}", style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
-          const SizedBox(height: 8),
-          SizedBox(width: double.infinity, height: 35, child: ElevatedButton(onPressed: () {
-            Provider.of<CartProvider>(context, listen: false).addItem(product['id'], price, product['name'], product['image'], "32");
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("ADDED TO BAG"), backgroundColor: Colors.black));
-          }, style: ElevatedButton.styleFrom(backgroundColor: Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)), elevation: 0), child: const Text("ADD TO BAG", style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context, bool isWeb) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: isWeb ? 40 : 15),
-      height: isWeb ? 80 : 70, color: Colors.white,
-      child: Row(children: [
-        Builder(builder: (ctx) => IconButton(icon: const Icon(Icons.menu_outlined, color: Colors.black), onPressed: () => Scaffold.of(ctx).openDrawer())),
-        const SizedBox(width: 10),
-        Text("DenimDiverse.", style: GoogleFonts.montserrat(fontSize: isWeb ? 24 : 18, fontWeight: FontWeight.w900, color: Colors.black)),
-        const Spacer(),
-        Consumer<CartProvider>(builder: (context, cart, child) => InkWell(onTap: () => Navigator.pushNamed(context, '/cart'), child: Badge(label: Text("${cart.itemCount}"), child: const Icon(Icons.shopping_bag_outlined, color: Colors.black)))),
-      ]),
-    );
-  }
-
-  Widget _buildHero(double width, bool isWeb) => Container(
-    width: double.infinity, height: isWeb ? 650 : 500,
-    decoration: const BoxDecoration(color: Color(0xFF0A192F)),
-    child: Stack(
-      children: [
-        Positioned.fill(child: Opacity(opacity: 0.8, child: Image.asset('assets/images/denim_diverse.jpg', fit: BoxFit.cover))),
-        Positioned(
-          left: isWeb ? 80 : 30, top: isWeb ? 220 : 160,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text("COLLECTION 2026", style: GoogleFonts.montserrat(fontSize: 12, color: Colors.white70, letterSpacing: 4)),
-            const SizedBox(height: 10),
-            Text("BEYOND\nTHE BLUE", style: GoogleFonts.montserrat(fontSize: isWeb ? 85 : 48, fontWeight: FontWeight.w900, color: Colors.white, height: 0.9, letterSpacing: -2)),
-            const SizedBox(height: 30),
-            _blackButton("EXPLORE NOW", onTap: _scrollToProducts)
-          ]),
-        ),
       ],
+    );
+  }
+
+  Widget _socialIcon(IconData icon, Color color) => Container(
+    width: 38,
+    height: 38,
+    decoration: BoxDecoration(
+      color: const Color(0xFF222222),
+      borderRadius: BorderRadius.circular(50),
     ),
+    child: Icon(icon, color: color, size: 18),
   );
 
-  Widget _buildProductGrid(bool isWeb) {
-    final filtered = fitsData.where((p) => p['name']!.toLowerCase().contains(searchQuery.toLowerCase()) && (selectedCategory == "ALL JEANS" || p['category'] == selectedCategory)).toList();
-    return GridView.builder(
-      shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: filtered.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: isWeb ? 4 : 2, childAspectRatio: isWeb ? 0.65 : 0.58, mainAxisSpacing: 25, crossAxisSpacing: 15),
-      itemBuilder: (context, index) => _buildProductCard(filtered[index]),
-    );
-  }
-
-  Widget _buildProductCard(Map<String, dynamic> data) {
-    double originalPrice = data['originalPrice'];
-    double discountedPrice = originalPrice * 0.60;
-    return InkWell(
-      onTap: () {
-        Map<String, dynamic> dataForDetail = {'id': data['id'], 'name': data['name'], 'price': discountedPrice, 'image': data['image']};
-        Navigator.pushNamed(context, '/product-detail', arguments: dataForDetail);
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: Stack(children: [Container(color: const Color(0xFFF6F6F6), width: double.infinity, child: Image.asset(data['image']!, fit: BoxFit.cover)), Positioned(top: 10, left: 10, child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), color: Colors.black, child: const Text("40% OFF", style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold))))])),
-          const SizedBox(height: 12),
-          Text(data['name']!.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Colors.black, letterSpacing: 1)),
-          const SizedBox(height: 6),
-          Row(children: [Text("Rs. ${discountedPrice.toStringAsFixed(0)}", style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: Colors.redAccent)), const SizedBox(width: 8), Text("Rs. ${originalPrice.toStringAsFixed(0)}", style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11, color: Colors.grey, decoration: TextDecoration.lineThrough))]),
-          const SizedBox(height: 6),
-          _buildStars(data['rating'], data['reviews']),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStars(double rating, int reviews) {
-    return Row(children: [...List.generate(5, (index) => Icon(index < rating.floor() ? Icons.star : Icons.star_border, color: Colors.orange, size: 14)), const SizedBox(width: 5), Text("($reviews)", style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w600))]);
-  }
-
-  Widget _buildFooter(bool isWeb) => Container(width: double.infinity, color: Colors.black, padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 30), child: Column(children: [Text("DenimDiverse.", style: GoogleFonts.montserrat(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white)), const SizedBox(height: 20), const Text("BEYOND THE STANDARD BLUE", style: TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 2)), const SizedBox(height: 30), Row(mainAxisAlignment: MainAxisAlignment.center, children: [_socialIconButton(Icons.play_circle_fill, Colors.red), const SizedBox(width: 20), _socialIconButton(Icons.camera_alt, Colors.pinkAccent), const SizedBox(width: 20), _socialIconButton(Icons.facebook, Colors.blueAccent)]), const SizedBox(height: 40), const Text("© 2026 DENIM DIVERSE. BY SHAIWICODE", style: TextStyle(color: Colors.white24, fontSize: 9, letterSpacing: 1))]));
-  Widget _socialIconButton(IconData icon, Color color) => IconButton(icon: Icon(icon, color: color, size: 28), onPressed: () {});
-  Widget _buildCategoryChips() => SizedBox(height: 40, child: ListView.builder(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 15), itemCount: categories.length, itemBuilder: (context, index) => Padding(padding: const EdgeInsets.only(right: 10), child: ChoiceChip(label: Text(categories[index], style: TextStyle(fontSize: 10, color: selectedCategory == categories[index] ? Colors.white : Colors.black)), selected: selectedCategory == categories[index], onSelected: (val) { if (categories[index] == "CRAZY DEALS") { Navigator.push(context, MaterialPageRoute(builder: (context) => const CrazyDealsScreen())); } else { setState(() => selectedCategory = categories[index]); _scrollToProducts(); } }, selectedColor: Colors.black, backgroundColor: const Color(0xFFF6F6F6)))));
-  Widget _buildSectionHeader(String title) => Column(children: [Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 2)), const SizedBox(height: 5), Container(height: 3, width: 30, color: Colors.black)]);
-  Widget _blackButton(String text, {required VoidCallback onTap}) => InkWell(onTap: onTap, child: Container(padding: const EdgeInsets.symmetric(horizontal: 45, vertical: 18), color: Colors.black, child: Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11))));
-  Widget _buildBlueTopBar() => Container(height: 35, color: const Color(0xFF0066D4), child: const Center(child: Text("FREE DELIVERY ON ALL ORDERS OVER RS. 5000", style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold))));
-}
-
-class DenimScrollingTicker extends StatefulWidget {
-  const DenimScrollingTicker({super.key});
-  @override
-  State<DenimScrollingTicker> createState() => _DenimScrollingTickerState();
-}
-
-class _DenimScrollingTickerState extends State<DenimScrollingTicker> {
-  late ScrollController _tickerController;
-  @override
-  void initState() {
-    super.initState();
-    _tickerController = ScrollController();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _startScrolling());
-  }
-
-  void _startScrolling() async {
-    while (_tickerController.hasClients) {
-      await Future.delayed(const Duration(milliseconds: 30));
-      if (_tickerController.hasClients) {
-        double maxScroll = _tickerController.position.maxScrollExtent;
-        double currentScroll = _tickerController.offset;
-        if (currentScroll >= maxScroll) {
-          _tickerController.jumpTo(0);
-        } else {
-          _tickerController.animateTo(currentScroll + 2.5, duration: const Duration(milliseconds: 30), curve: Curves.linear);
-        }
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _tickerController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final List<String> tickerItems = ["DENIM YOU'LL LOVE.", "QUALITY YOU CAN FEEL.", "STRETCH THAT LASTS.", "CRAFTED FOR COMFORT.", "BEYOND THE BLUE.", "PREMIUM FABRIC ONLY."];
-    return Container(
-      height: 45, width: double.infinity,
-      // Changed to Denim Navy Blue color
-      decoration: const BoxDecoration(color: Color(0xFF0D1B2A)),
-      child: ListView.builder(
-        controller: _tickerController, scrollDirection: Axis.horizontal, physics: const NeverScrollableScrollPhysics(), itemCount: 200,
-        itemBuilder: (context, index) => Row(children: [const SizedBox(width: 50), Text(tickerItems[index % tickerItems.length], style: GoogleFonts.montserrat(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.5)), const SizedBox(width: 50), const Icon(Icons.circle, size: 4, color: Colors.orange)]),
-      ),
+  Widget _footerLinks(String title, List<String> links) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 2,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...links.map((l) => Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Text(
+            l,
+            style: const TextStyle(
+              color: AppColors.medGrey,
+              fontSize: 12,
+              height: 1.5,
+            ),
+          ),
+        )),
+      ],
     );
   }
 }

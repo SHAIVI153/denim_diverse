@@ -1,55 +1,174 @@
-import 'package:denim_diverse/product.dart';
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
+import '../product.dart';
+import '../providers/cart_provider.dart';
+import '../screens/app_theme.dart';
+import 'common_widgets.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
-  const ProductCard({super.key, required this.product});
+  final VoidCallback? onTap;
+  final bool showAddToCart;
+
+  const ProductCard({
+    super.key,
+    required this.product,
+    this.onTap,
+    this.showAddToCart = true,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start, // Left aligned jaisa guide mein hai
-      children: [
-        // Product Image Container
-        Expanded(
-          child: Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF5F5F5),
+    final cart = context.watch<CartProvider>();
+    final inCart = cart.contains(product.id);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image Container
+          Expanded(
+            child: Stack(
+              children: [
+                // Product Image
+                Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: AppColors.surface,
+                  ),
+                  child: Image.asset(
+                    product.image,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Center(
+                      child: Icon(Icons.image_not_supported_outlined,
+                          color: AppColors.lightGrey, size: 40),
+                    ),
+                  ),
+                ),
+                // Badges
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (product.isOnSale)
+                        DiscountBadge(
+                          label: '${product.discountPercent.toInt()}% OFF',
+                          color: AppColors.black,
+                        ),
+                      if (product.isNew) ...[
+                        const SizedBox(height: 4),
+                        const DiscountBadge(
+                          label: 'NEW',
+                          color: AppColors.blue,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                // Wishlist
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withOpacity(0.9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.favorite_border,
+                        size: 16, color: AppColors.darkGrey),
+                  ),
+                ),
+              ],
             ),
-            child: Image.asset(
-              product.imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-              const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+          ),
+          const SizedBox(height: 10),
+          // Product Info
+          Text(
+            product.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 10,
+              color: AppColors.black,
+              letterSpacing: 1,
             ),
           ),
-        ),
-        const SizedBox(height: 12),
-        // Product Title (BOLD & SHARP)
-        Text(
-          product.name.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w900, // Extra bold for the 'Fit' name
-            letterSpacing: 1.2,
-            color: Colors.black,
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Text(
+                'Rs. ${product.salePrice.toStringAsFixed(0)}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13,
+                  color: AppColors.crimson,
+                ),
+              ),
+              if (product.isOnSale) ...[
+                const SizedBox(width: 6),
+                Text(
+                  'Rs. ${product.originalPrice.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 10,
+                    color: AppColors.lightGrey,
+                    decoration: TextDecoration.lineThrough,
+                  ),
+                ),
+              ],
+            ],
           ),
-        ),
-        const SizedBox(height: 4),
-        // Product Description or Price (Subtle)
-        Text(
-          "PREMIUM STRETCH DENIM - Rs. ${product.price.toInt()}",
-          maxLines: 2,
-          style: TextStyle(
-            fontSize: 10,
-            color: Colors.grey[600],
-            height: 1.4,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+          const SizedBox(height: 5),
+          StarRating(rating: product.rating, reviews: product.reviews),
+          if (showAddToCart) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              height: 36,
+              child: ElevatedButton(
+                onPressed: () {
+                  context.read<CartProvider>().addItem(
+                    product.id,
+                    product.salePrice,
+                    product.name,
+                    product.image,
+                    '32',
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(inCart
+                          ? '${product.name} quantity updated'
+                          : 'Added to bag'),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                  inCart ? AppColors.navyLight : AppColors.black,
+                  foregroundColor: AppColors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(2)),
+                ),
+                child: Text(
+                  inCart ? 'IN BAG ✓' : 'ADD TO BAG',
+                  style: const TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
