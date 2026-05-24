@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'cart_provider.dart';
 
 class OrderItem {
@@ -6,43 +6,60 @@ class OrderItem {
   final double amount;
   final List<CartItem> products;
   final DateTime dateTime;
-  final String userName;
-  final String userEmail;
-  final String userAddress;
-  final String userPhone;
+  final String name;
+  final String email;
+  final String address;
+  final String city;
+  final String phone;
+  final String paymentMethod;
+  String status;
 
   OrderItem({
     required this.id,
     required this.amount,
     required this.products,
     required this.dateTime,
-    required this.userName,
-    required this.userEmail,
-    required this.userAddress,
-    required this.userPhone,
+    required this.name,
+    required this.email,
+    required this.address,
+    required this.city,
+    required this.phone,
+    required this.paymentMethod,
+    this.status = 'Confirmed',
   });
 }
 
 class OrderProvider with ChangeNotifier {
-  List<OrderItem> _orders = [];
+  final List<OrderItem> _orders = [];
 
   List<OrderItem> get orders => [..._orders];
+  bool get hasOrders => _orders.isNotEmpty;
 
-  // CHECK: Ensure all 6 parameters are here in this exact order
-  void addOrder(List<CartItem> cartProducts, double total, String name, String email, String address, String phone) {
+  void placeOrder({
+    required List<CartItem> cartProducts,
+    required double total,
+    required String name,
+    required String email,
+    required String address,
+    required String city,
+    required String phone,
+    required String paymentMethod,
+  }) {
     _orders.insert(
       0,
       OrderItem(
-        id: DateTime.now().toString(),
+        id: 'DD-${DateTime.now().millisecondsSinceEpoch}',
         amount: total,
         dateTime: DateTime.now(),
         products: cartProducts,
-        userName: name,
-        userEmail: email,
-        userAddress: address,
-        userPhone: phone,
+        name: name,
+        email: email,
+        address: address,
+        city: city,
+        phone: phone,
+        paymentMethod: paymentMethod,
       ),
     );
-    notifyListeners(); // Yeh line screen refresh karne ke liye zaroori hai
+    notifyListeners();
   }
 }
