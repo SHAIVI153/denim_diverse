@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../screens/app_theme.dart';
 
 /// An animated promotional banner that slides in when scrolled into view.

@@ -1,8 +1,10 @@
 import 'package:denim_diverse/screens/product_data.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../product.dart';
 import '../providers/cart_provider.dart';
+
 import '../widgets/common_widgets.dart';
 import '../widgets/product_card.dart';
 import 'app_drawer.dart';

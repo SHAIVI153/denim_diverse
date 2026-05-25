@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../screens/app_theme.dart';
 
 /// A layout wrapper that adds a floating chat button and smooth scroll behavior.

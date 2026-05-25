@@ -1,6 +1,5 @@
 import 'package:denim_diverse/screens/product_data.dart';
 import 'package:flutter/material.dart';
-
 import '../widgets/common_widgets.dart';
 import 'app_theme.dart';
 

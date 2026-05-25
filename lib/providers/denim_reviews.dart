@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+
 import '../screens/app_theme.dart';
 
 /// Auto-scrolling horizontal review carousel widget.
