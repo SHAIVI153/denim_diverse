@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../screens/app_theme.dart';
 
 /// Full-width category showcase section with large image cards.
